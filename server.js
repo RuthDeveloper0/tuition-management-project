@@ -1,49 +1,40 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-// ייבוא ה-Middlewares שיצרת
+import systemRoutes from './routes/systemRoutes.js';
 import customLogger from './middleware/customLogger.js';
-import { protect, adminOnly } from './middleware/auth.js';
 
-// טעינת משתני הסביבה מקובץ .env
 dotenv.config();
 
 const app = express();
 
-// Middlewares גלובליים
-app.use(cors());
-app.use(express.json());
-app.use(customLogger); // הפעלת ה-Logger לכל בקשה נכנסת
+// הגדרת __dirname בעבודה עם ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// התחברות למסד הנתונים MongoDB
-mongoose.connect(process.env.MONGO_URI)
+// חיבור למסד הנתונים MongoDB
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/tuitionDB';
+
+mongoose
+  .connect(MONGO_URI)
   .then(() => console.log('MongoDB Connected Successfully'))
-  .catch(err => console.error('MongoDB Connection Error:', err));
+  .catch((err) => console.error('MongoDB Connection Error:', err));
 
-// --------------------------------------------------
-// נתיבי בדיקה (Test Routes)
-// --------------------------------------------------
+// Middleware לקבלת נתוני JSON בגוף הבקשה (Body)
+app.use(express.json());
 
-// 1. נתיב פתוח לכולם - לבדיקה שהשרת וה-Logger עובדים
-app.get('/api/test/public', (req, res) => {
-  res.json({ message: 'Public route works!' });
-});
+// Logger מותאם אישית למעקב אחר בקשות
+app.use(customLogger);
 
-// 2. נתיב מוגן - לבדיקת מנגנון ה-protect (דורש טוקן)
-app.get('/api/test/protected', protect, (req, res) => {
-  res.json({ message: 'Protected route works!', user: req.user });
-});
+// הגדרת תיקיית uploads כתיקייה סטטית לגישה לקבצים שהועלו
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// 3. נתיב מנהלים - לבדיקת מנגנון ה-adminOnly (דורש טוקן + תפקיד admin)
-app.get('/api/test/admin', protect, adminOnly, (req, res) => {
-  res.json({ message: 'Admin route works!', user: req.user });
-});
+// חיבור נתיבי המערכת
+app.use('/api/system', systemRoutes);
 
-// --------------------------------------------------
-
+// הרצת השרת
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
