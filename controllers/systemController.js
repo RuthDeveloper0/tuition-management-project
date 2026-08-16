@@ -1,45 +1,44 @@
 import User from '../models/User.js';
-import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-// הרשמת משתמש
+// פונקציית עזר ליצירת JWT Token כולל id ו-role
+const generateToken = (id, role) => {
+  return jwt.sign(
+    { id, role },
+    process.env.JWT_SECRET || 'fallback_secret',
+    { expiresIn: '30d' }
+  );
+};
+
+// 1. הרשמת משתמש חדש
 export const registerUser = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, role } = req.body;
 
-    // 1. בדיקה שכל השדות הנדרשים התקבלו
     if (!username || !email || !password) {
       return res.status(400).json({ message: 'נא למלא את כל השדות: שם משתמש, אימייל וסיסמה' });
     }
 
-    // 2. בדיקה אם המשתמש או האימייל כבר קיימים
     const userExists = await User.findOne({ $or: [{ email }, { username }] });
     if (userExists) {
       return res.status(400).json({ message: 'שם משתמש או אימייל כבר קיימים במערכת' });
     }
 
-    // 3. הצפנת הסיסמה
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    // 4. יצירת המשתמש החדש
+    // יצירת המשתמש — ה-Pre-Hook ב-User.js יצפין את הסיסמה אוטומטית!
     const user = await User.create({
       username,
       email,
-      password: hashedPassword
+      password,
+      role: role || 'parent'
     });
 
-    // 5. יצירת טוקן JWT
-    const token = jwt.sign(
-      { id: user._id, username: user.username },
-      process.env.JWT_SECRET || 'fallback_secret',
-      { expiresIn: '30d' }
-    );
+    const token = generateToken(user._id, user.role);
 
     res.status(201).json({
       _id: user._id,
       username: user.username,
       email: user.email,
+      role: user.role,
       token
     });
   } catch (error) {
@@ -48,7 +47,7 @@ export const registerUser = async (req, res) => {
   }
 };
 
-// התחברות משתמש
+// 2. התחברות משתמש
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -57,33 +56,46 @@ export const loginUser = async (req, res) => {
       return res.status(400).json({ message: 'נא להזין אימייל וסיסמה' });
     }
 
-    // חיפוש המשתמש לפי אימייל
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: 'פרטי התחברות שגויים' });
     }
 
-    // אימות הסיסמה
-    const isMatch = await bcrypt.compare(password, user.password);
+    // שימוש במתודה comparePassword מהמודל User.js
+    const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(400).json({ message: 'פרטי התחברות שגויים' });
     }
 
-    // יצירת טוקן
-    const token = jwt.sign(
-      { id: user._id, username: user.username },
-      process.env.JWT_SECRET || 'fallback_secret',
-      { expiresIn: '30d' }
-    );
+    const token = generateToken(user._id, user.role);
 
     res.json({
       _id: user._id,
       username: user.username,
       email: user.email,
+      role: user.role,
       token
     });
   } catch (error) {
     console.error('Login Error:', error);
     res.status(500).json({ message: 'שגיאת שרת בהתחברות', error: error.message });
+  }
+};
+
+// 3. קבלת פרטי המשתמש המחובר (getMe)
+export const getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: 'משתמש לא נמצא' });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    console.error('GetMe Error:', error);
+    res.status(500).json({ message: 'שגיאת שרת בקבלת נתוני משתמש', error: error.message });
   }
 };
