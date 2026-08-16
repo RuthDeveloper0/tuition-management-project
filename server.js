@@ -5,6 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import systemRoutes from './routes/systemRoutes.js';
+import authRoutes from './routes/authRoutes.js'; // 1. יבוא נתיבי האימות
 import customLogger from './middleware/customLogger.js';
 
 dotenv.config();
@@ -32,8 +33,9 @@ app.use(customLogger);
 // הגדרת תיקיית uploads כתיקייה סטטית לגישה לקבצים שהועלו
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// חיבור נתיבי המערכת
+// חיבור נתיבי המערכת והאימות
 app.use('/api/system', systemRoutes);
+app.use('/api/auth', authRoutes); // 2. חיבור נתיבי האימות לשרת
 
 // הרצת השרת
 const PORT = process.env.PORT || 5000;
