@@ -5,7 +5,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import systemRoutes from './routes/systemRoutes.js';
-import authRoutes from './routes/authRoutes.js'; // 1. יבוא נתיבי האימות
+import authRoutes from './routes/authRoutes.js';
+import familyRoutes from './routes/familyRoutes.js'; // 1. ייבוא נתיבי המשפחות
 import customLogger from './middleware/customLogger.js';
 
 dotenv.config();
@@ -30,13 +31,16 @@ app.use(express.json());
 // Logger מותאם אישית למעקב אחר בקשות
 app.use(customLogger);
 
-// הגדרת תיקיית uploads כתיקייה סטטית לגישה לקבצים שהועלו
+// הגדרת תיקיית uploads ותיקיית public כתיקיות סטטיות
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(express.static(path.join(__dirname, 'public')));
 
-// חיבור נתיבי המערכת והאימות
+// חיבור נתיבי ה-API
 app.use('/api/system', systemRoutes);
-app.use('/api/auth', authRoutes); // 2. חיבור נתיבי האימות לשרת
+app.use('/api/auth', authRoutes);
+app.use('/api/families', familyRoutes); // 2. חיבור נתיבי המשפחות לשרת
 
 // הרצת השרת
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
