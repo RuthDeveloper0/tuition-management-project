@@ -6,7 +6,8 @@ import { fileURLToPath } from 'url';
 
 import systemRoutes from './routes/systemRoutes.js';
 import authRoutes from './routes/authRoutes.js';
-import familyRoutes from './routes/familyRoutes.js'; // 1. ייבוא נתיבי המשפחות
+import familyRoutes from './routes/familyRoutes.js';
+import childRoutes from './routes/childRoutes.js';
 import customLogger from './middleware/customLogger.js';
 
 dotenv.config();
@@ -38,9 +39,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 // חיבור נתיבי ה-API
 app.use('/api/system', systemRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/families', familyRoutes); // 2. חיבור נתיבי המשפחות לשרת
+app.use('/api/families', familyRoutes);
+app.use('/api/children', childRoutes);
 
 // הרצת השרת
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
