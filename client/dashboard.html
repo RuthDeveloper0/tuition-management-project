@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מערכת ניהול - לוח בקרה</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="main-header">
+        <h1>מערכת ניהול תשלומי לימוד</h1>
+        <button id="logoutBtn" class="btn-secondary">התנתק</button>
+    </header>
+
+    <main class="container">
+        <section class="actions-panel">
+            <h2>רשימת משפחות</h2>
+            <button id="addFamilyBtn" class="btn-primary">+ הוספת משפחה</button>
+        </section>
+
+        <section class="data-table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>שם משפחה</th>
+                        <th>שם הורה</th>
+                        <th>טלפון</th>
+                        <th>מספר ילדים</th>
+                        <th>סה"כ מחיר</th>
+                        <th>פעולות</th>
+                    </tr>
+                </thead>
+                <tbody id="familiesTableBody">
+                    <!-- הנתונים יוזנו לכאן באמצעות JavaScript -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <script src="js/services/api.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
