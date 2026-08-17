@@ -6,7 +6,7 @@ import {
   updateFamily,
   deleteFamily
 } from '../controllers/familyController.js';
-import { protect, adminOnly } from '../middleware/authMiddleware.js';
+import { protect, adminOnly } from '../middleware/auth.js';
 
 const router = express.Router();
 

@@ -1,4 +1,4 @@
-import Family from "../models/Family";
+import Family from "../models/Family.js";
 
 export const getFamilies = async (req, res) => {
   try {
