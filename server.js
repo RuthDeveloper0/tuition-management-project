@@ -1,47 +1,58 @@
 import express from 'express';
 import mongoose from 'mongoose';
+import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import systemRoutes from './routes/systemRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import familyRoutes from './routes/familyRoutes.js';
-import childRoutes from './routes/childRoutes.js';
-import customLogger from './middleware/customLogger.js';
 
 dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 5000;
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/tuition_management';
 
-// הגדרת __dirname בעבודה עם ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// חיבור למסד הנתונים MongoDB
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/tuitionDB';
-
-mongoose
-  .connect(MONGO_URI)
-  .then(() => console.log('MongoDB Connected Successfully'))
-  .catch((err) => console.error('MongoDB Connection Error:', err));
-
-// Middleware לקבלת נתוני JSON בגוף הבקשה (Body)
+app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Logger מותאם אישית למעקב אחר בקשות
-app.use(customLogger);
+// הנגשת תיקיית ה-client הסטטית
+const clientPath = path.join(__dirname, 'client');
+app.use(express.static(clientPath));
 
-// הגדרת תיקיית uploads ותיקיית public כתיקיות סטטיות
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use(express.static(path.join(__dirname, 'public')));
 
-// חיבור נתיבי ה-API
-app.use('/api/system', systemRoutes);
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/families', familyRoutes);
-app.use('/api/children', childRoutes);
 
-// הרצת השרת
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', message: 'Server is running smoothly' });
+});
+
+// החזרת index.html לכל ראוט רגיל
+app.get('*', (req, res) => {
+  res.sendFile(path.join(clientPath, 'index.html'));
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Unhandled Error:', err.stack);
+  res.status(500).json({ message: 'שגיאת שרת פנימית', error: err.message });
+});
+
+mongoose.connect(MONGO_URI)
+  .then(() => {
+    console.log('Connected to MongoDB successfully.');
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('Failed to connect to MongoDB:', err.message);
+  });
