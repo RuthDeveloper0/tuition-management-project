@@ -1,40 +1,40 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import User from './models/User.js';
+import Family from './models/Family.js';
+import Child from './models/Child.js';
 
 dotenv.config();
 
-const seedUsers = async () => {
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/tuition_management';
+
+const seedData = async () => {
   try {
-    // התחברות ל-MongoDB
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log('MongoDB Connected for Seeding...');
-
-    // ניקוי משתמשים קיימים
+    await mongoose.connect(MONGO_URI);
     await User.deleteMany({});
+    await Family.deleteMany({});
+    await Child.deleteMany({});
 
-    // יצירת משתמש מנהל ראשוני
-    await User.create({
-      username: 'adminUser',
-      email: 'admin@example.com',
-      password: 'Password123!',
+    const admin = new User({
+      username: 'admin',
+      password: 'adminpassword',
       role: 'admin'
     });
+    await admin.save();
 
-    // יצירת משתמש הורה ראשוני
-    await User.create({
-      username: 'parentUser',
-      email: 'parent@example.com',
-      password: 'Password123!',
-      role: 'parent'
+    const parent = new User({
+      username: 'parent1',
+      password: 'parentpassword',
+      role: 'client'
     });
+    await parent.save();
 
-    console.log('Seed completed successfully! Admin and Parent created.');
-    process.exit(0);
+    console.log('נתונים ראשוניים נוצרו בהצלחה!');
+    process.exit();
   } catch (error) {
-    console.error('Error with Seeding:', error.message);
+    console.error('שגיאה ביצירת נתונים:', error);
     process.exit(1);
   }
 };
 
-seedUsers();
+seedData();
