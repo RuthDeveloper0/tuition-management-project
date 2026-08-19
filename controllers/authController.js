@@ -1,56 +1,38 @@
-import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
-import Family from '../models/Family.js';
+import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key';
 
-// הרשמת משתמש הורה חדש
+// 1. הרשמת משתמש חדש (הורה) - שם משתמש וסיסמה בלבד
 export const register = async (req, res) => {
   try {
-    const { username, password, familyCode } = req.body;
+    const { username, password } = req.body;
 
-    if (!username || !password || !familyCode) {
-      return res.status(400).json({ message: 'יש להזין שם משתמש, סיסמה וקוד משפחה' });
+    if (!username || !password) {
+      return res.status(400).json({ message: 'יש להזין שם משתמש וסיסמה' });
     }
 
-    const existingUser = await User.findOne({ username: username.trim() });
+    const existingUser = await User.findOne({ username });
     if (existingUser) {
-      return res.status(400).json({ message: 'שם משתמש זה כבר קיים במערכת' });
+      return res.status(400).json({ message: 'שם המשתמש כבר קיים במערכת' });
     }
 
-    const cleanCode = familyCode.trim().replace('#', '').toLowerCase();
-
-    // חיפוש המשפחה במסד הנתונים לפי ID מלא, שדה code, או סופית ה-ID
-    const allFamilies = await Family.find({});
-    const family = allFamilies.find(f => {
-      const idStr = f._id.toString().toLowerCase();
-      const codeStr = (f.code || f.familyCode || '').toLowerCase();
-      return (
-        idStr === cleanCode ||
-        codeStr === cleanCode ||
-        idStr.endsWith(cleanCode)
-      );
+    // המודל מטפל בהצפנת הסיסמה ב-pre('save')
+    const user = new User({
+      username,
+      password,
+      role: 'client'
     });
 
-    if (!family) {
-      return res.status(400).json({ message: 'קוד המשפחה שהוזן אינו תקין או שאינו קיים במערכת' });
-    }
+    await user.save();
 
-    const newUser = new User({
-      username: username.trim(),
-      password: password,
-      role: 'client',
-      familyId: family._id
-    });
-
-    await newUser.save();
-    res.status(201).json({ message: 'משתמש נרשם בהצלחה' });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(201).json({ message: 'הרשמה בוצעה בהצלחה' });
+  } catch (error) {
+    res.status(500).json({ message: 'שגיאה בהרשמה', error: error.message });
   }
 };
 
-// התחברות למערכת (מנהל או הורה)
+// 2. התחברות משתמש (מנהל או הורה)
 export const login = async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -59,24 +41,43 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: 'יש להזין שם משתמש וסיסמה' });
     }
 
-    const user = await User.findOne({ username: username.trim() });
+    const user = await User.findOne({ username });
     if (!user) {
-      return res.status(401).json({ message: 'שם משתמש או סיסמה שגויים' });
+      return res.status(400).json({ message: 'שם משתמש או סיסמה שגויים' });
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(401).json({ message: 'שם משתמש או סיסמה שגויים' });
+      return res.status(400).json({ message: 'שם משתמש או סיסמה שגויים' });
     }
 
+    // יצירת טוקן
     const token = jwt.sign(
-      { userId: user._id, role: user.role, familyId: user.familyId },
+      { id: user._id, role: user.role },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
 
-    res.json({ token, role: user.role, familyId: user.familyId });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.json({
+      token,
+      role: user.role,
+      username: user.username,
+      familyId: user.familyId
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'שגיאה בהתחברות', error: error.message });
+  }
+};
+
+// 3. אימות טוקן לקבלת פרטי המשתמש המחובר (Auto-Login)
+export const getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: 'משתמש לא נמצא' });
+    }
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'שגיאת שרת', error: error.message });
   }
 };
