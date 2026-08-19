@@ -1,5 +1,7 @@
+// ייבוא מודל הילד (Child) מתיקיית המודלים
 import Child from '../models/Child.js';
 
+// מיפוי שמגדיר לכל קבוצת גיל נוכחית מהי קבוצת הגיל הבאה אליה הילד יעבור
 const nextAgeGroupMap = {
   'מעון פעוטות': 'מעון ביניים',
   'מעון ביניים': 'מעון בוגרים',
@@ -18,21 +20,34 @@ const nextAgeGroupMap = {
   'חריגה / למחיקה': 'חריגה / למחיקה'
 };
 
+/**
+ * פונקציה לקידום כל הילדים במערכת בשנת לימודים אחת.
+ * הפונקציה עוברת על כל הילדים במסד הנתונים ומעדכנת את קבוצת הגיל שלהם.
+ */
 export const advanceYear = async (req, res) => {
   try {
+    // שליפת כל רשומות הילדים ממסד הנתונים
     const children = await Child.find();
 
+    // מעבר בלולאה על כל ילד ועדכון קבוצת הגיל שלו
     for (let child of children) {
+      // מציאת קבוצת הגיל הבאה לפי המיפוי; אם לא נמצאה התאמה, נשארת קבוצת הגיל הנוכחית
       const nextGroup = nextAgeGroupMap[child.ageGroup] || child.ageGroup;
       child.ageGroup = nextGroup;
+
+      // אם הילד הגיע לקבוצת חריגה/למחיקה, מסמנים אותו לטיפול/למחיקה
       if (nextGroup === 'חריגה / למחיקה') {
         child.markedForAction = true;
       }
+
+      // שמירת השינויים עבור הילד הנוכחי במסד הנתונים
       await child.save();
     }
 
+    // החזרת תגובת הצלחה ללקוח
     res.json({ message: 'עדכון השנה בוצע בהצלחה לכל הילדים' });
   } catch (error) {
+    // הטיפול בשגיאות במידה ומשהו נכשל במהלך התהליך
     res.status(500).json({ message: 'שגיאה בביצוע עדכון שנה', error: error.message });
   }
 };
