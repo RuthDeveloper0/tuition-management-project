@@ -1,22 +1,45 @@
 import mongoose from 'mongoose';
 
 const childSchema = new mongoose.Schema({
-  firstName: {
+  firstName:{
     type: String,
-    required: [true, 'נא להזין שם פרטי של הילד'],
-    trim: true
+    required: [true , 'שם פרטי הינו שדה חובה'],
+    trim: true// מנקה רווחים
   },
-  grade: {
-    type: Number,
-    required: [true, 'נא להזין כיתה/שנתון'],
-    min: 1,
-    max: 12
-  },
-  price: {
-    type: Number,
-    required: true,
-    default: 0
-  }
-}, { timestamps: true });
 
-export default childSchema; // מיוצא כ-Subdocument שמשולב בתוך Family
+  familyId:{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Family',//מקשר את הילד למשפחה שאליה הוא שייך.
+    required: true// שדה חובה
+  },
+
+  ageGroup:{
+    type: String,
+    enum: [
+  'מעון בוגרים', 'מעון ביניים', 'מעון פעוטות',
+  'גן גיל 5', 'גן גיל 4', 'גן גיל 3',
+  'כיתה א', 'כיתה ב', 'כיתה ג', 'כיתה ד', 'כיתה ה', 'כיתה ו',
+  'חריגה / למחיקה', 'כיתה ז', 'כיתה ח'
+],// רשימה סגורה לבחירה
+    required: true
+  },
+
+  birthYear:{
+    type: Number,
+    required: true
+  },
+
+  customPrice:{
+    type: Number,
+    default: null// אם אין מחיר ברירת מחדל ריק
+  },
+
+  markedForAction:{
+    type: Boolean,
+    default: false
+  }
+},{
+  timestamps: true//מוסיף אוטומטית שני שדות למסמך: מתי הרשומה נוצרה  ומתי היא עודכנה לאחרונה 
+});
+
+export default mongoose.model('Child' , childSchema);
