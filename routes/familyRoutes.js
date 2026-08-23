@@ -133,4 +133,178 @@ router.get('/', async (req, res) => {
 });
 
 
+// 5. הוספת משפחה חדשה
+router.post('/', upload.array('files'), async (req, res) => {
+  try{
+    const { familyName, fatherName, motherName, fatherPhone, motherPhone, paymentStatus, notes, familyCode } = req.body;
 
+    if (!familyName || !familyName.trim()) {
+      return res.status(400).json({ message: 'שם משפחה הוא שדה חובה' });
+    }
+
+     // תיקון נתיבי הקבצים למניעת בעיות סלאשים במערכות הפעלה שונות
+    const filesPaths = req.files ? req.files.map(file => file.path.replace(/\\/g, '/')) : [];
+
+    let parsedPaymentStatus = true;
+    
+    if (paymentStatus !== undefined) {
+      parsedPaymentStatus = paymentStatus === 'true' || paymentStatus === true;
+    }
+
+    const newFamily = new Family({
+      familyName: familyName.trim(),
+      fatherName: fatherName ? fatherName.trim() : '',
+      motherName: motherName ? motherName.trim() : '',
+      fatherPhone: fatherPhone ? fatherPhone.trim() : '',
+      motherPhone: motherPhone ? motherPhone.trim() : '',
+      familyCode: familyCode ? familyCode.trim() : '',
+      paymentStatus: parsedPaymentStatus,
+      notes: notes ? notes.trim() : '',
+      files: filesPaths,
+      children: []
+    });
+
+    const savedFamily = await newFamily.save();
+
+    return res.status(201).json(savedFamily);
+  }
+
+  catch (error) {
+    return res.status(400).json({ message: err.message });
+  }
+});
+
+
+// 6. העלאת קבצים למשפחה קיימת
+router.post('/:id/files', upload.array('files'), async (req, res) => {
+  try {
+    const family = await Family.findById(req.params.id);
+    
+    if (!family) {
+      return res.status(404).json({ message: 'המשפחה לא נמצאה' });
+    }
+
+     if (req.files && req.files.length > 0) {
+      const newFiles = req.files.map(file => file.path.replace(/\\/g, '/'));
+      family.files = family.files ? family.files.concat(newFiles) : newFiles;
+      await family.save();
+    }
+
+    res.json(family);
+  }
+  catch (error) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// 6.5. מחיקת קובץ מצורף למשפחה
+router.delete('/:id/files', async (req, res) => {
+  try{
+    const { familyId } = req.params;
+    const realFamilyId = req.params.id;
+    const { filePath } = req.body;
+
+    if (!filePath) {
+      return res.status(400).json({ message: 'לא צוין נתיב קובץ למחיקה' });
+    }
+
+     const family = await Family.findById(realFamilyId);
+    if (!family) {
+      return res.status(404).json({ message: 'המשפחה לא נמצאה' });
+    }
+
+    // ניקוי הנתיב והרכבת הנתיב המלא פיזית בדיסק 
+    const cleanPath = filePath.startsWith('/') ? filePath.slice(1) : filePath;
+    const absolutePath = path.join(__dirname, '..', cleanPath);
+
+    // מחיקת הקובץ פיזית מהדיסק אם הוא קיים
+    try {
+      await fs.unlink(absolutePath);
+    } catch (error) {
+      console.log('הקובץ לא נמצא פיזית בדיסק, ממשיכים בעדכון מסד הנתונים:', err.message);
+    }
+
+    // הסרת הנתיב ממערך הקבצים במסד הנתונים
+    family.files = family.files.filter(f => {
+      const fPath = typeof f === 'string' ? f : (f.path || f.url || '');
+      return fPath !== filePath;
+    });
+
+    await family.save();
+    return res.json(family);
+  }
+  
+  catch (error) {
+    console.error('שגיאה במחיקת קובץ:', err);
+    return res.status(500).json({ message: 'שגיאה במחיקת הקובץ: ' + err.message });
+  }
+});
+
+// 7. עדכון מהיר של סטטוס תשלום
+router.patch('/:id/payment-status', async (req, res) => {
+  try{
+    const {paymentStatus} = req.body;
+    const isPaid = paymentStatus === true || paymentStatus ==='true';
+    const family = await Family.findByIdAndUpdate(req.params.id,
+       { $set: { paymentStatus: isPaid } },
+       {new: true}
+    );
+
+    if(!family){
+      return res.status(404).json({ message: 'המשפחה לא נמצאה' });
+    }
+
+    res.json(family);
+  }
+  catch(error){
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// 8. עדכון נתוני משפחה קיימת
+router.put('/:id', upload.array('files'), async (req, res) => {
+  try{
+    const { familyName, fatherName, motherName, fatherPhone, motherPhone, paymentStatus, notes, familyCode } = req.body;
+    const family = await Family.findById(req.params.id);
+
+    if (!family) {
+      return res.status(404).json({ message: 'המשפחה לא נמצאה' });
+    }
+
+    if(familyName)
+      family.familyName = familyName.trim();
+    if(fatherName !== undefined)
+      family.fatherName = fatherName.trim();
+    if(motherName !== undefined)
+      family.motherName = motherName.trim();
+    if (fatherPhone !== undefined)
+      family.fatherPhone = fatherPhone.trim();
+    if (motherPhone !== undefined) 
+      family.motherPhone = motherPhone.trim();
+    if (familyCode !== undefined) 
+      family.familyCode = familyCode.trim();
+    if (paymentStatus !== undefined) {
+      family.paymentStatus = paymentStatus === 'true' || paymentStatus === true;
+    }
+    if (notes !== undefined)
+       family.notes = notes.trim();
+
+    if (req.files && req.files.length > 0) {//בדיקה האם יש קבצים חדשים
+      const newFiles = req.files.map(file => file.path.replace(/\\/g, '/'));
+      family.files = family.files ? family.files.concat(newFiles) : newFiles;
+    }
+
+    await family.save();
+    res.json(family);
+  }
+  catch(error){
+    res.status(500).json({ message: err.message });
+  }
+});
