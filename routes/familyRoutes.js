@@ -308,3 +308,177 @@ router.put('/:id', upload.array('files'), async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
+
+// 9. מחיקת משפחה
+router.delete('/:id', async (req, res) => {
+  try{
+    await Family.findByIdAndDelete(req.params.id);
+    res.json({ message: 'המשפחה נמחקה בהצלחה' });
+  }
+  catch (error) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+
+// 10. הוספת ילד למשפחה
+router.post('/:id/children', async (req, res) => {
+  try {
+    const { name, grade, customPrice, price } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: 'שם הילד הוא שדה חובה' });
+    }
+
+    const family = await Family.findById(req.params.id);
+
+    if(!family){
+       return res.status(404).json({ message: 'המשפחה לא נמצאה' });
+    }
+
+     if (!Array.isArray(family.children)) {
+      family.children = [];
+    }
+
+     const finalPriceInput = (customPrice !== undefined && customPrice !== '') ? customPrice : price;
+    let computedPrice;
+    if (finalPriceInput !== undefined && finalPriceInput !== null && finalPriceInput !== '') {
+      computedPrice = Number(finalPriceInput);
+    } else {
+      computedPrice = getDefaultPriceByGrade(grade);//  אם שדה המחיר ריק או לא תקין, הקוד מפעיל את פונקציית העזר שלנו לקבל מחיר לילד לפי ברירת מחדל של הכיתה 
+  }
+
+  family.children.push({ name: name.trim(), grade, price: computedPrice });
+    await family.save();
+
+    return res.status(201).json(family);
+    }
+  catch(error){
+    return res.status(500).json({ message: 'שגיאה בהוספת ילד: ' + err.message });
+  }
+});
+
+
+// 11. עדכון נתוני ילד קיים
+router.put('/:id/children/:childId', async (req, res) => {
+  try{
+    const { name, grade, customPrice, price } = req.body;
+    const family = await Family.findById(req.params.id);
+
+    if (!family) 
+      return res.status(404).json({ message: 'המשפחה לא נמצאה' });
+
+     const child = family.children.id(req.params.childId);
+    if (!child)
+       return res.status(404).json({ message: 'הילד לא נמצא' });
+
+    if(name !== undefined)
+      child.name = name.trim();
+    if(grade !== undefined)
+      child.grade = grade;
+
+    const finalPriceInput = (customPrice !== undefined && customPrice !== '') ? customPrice : price;
+    if (finalPriceInput !== undefined && finalPriceInput !== null && finalPriceInput !== '') {
+      child.price = Number(finalPriceInput);
+    } 
+    else if (grade !== undefined) {
+      child.price = getDefaultPriceByGrade(grade);
+    }
+
+    family.markModified('children');
+    await family.save();
+
+    res.json(family);
+  }
+   catch (error) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// 12. מחיקת ילד
+router.delete('/:id/children/:childId', async (req, res) => {
+  try {
+    const family = await Family.findById(req.params.id);
+    if (!family) return res.status(404).json({ message: 'המשפחה לא נמצאה' });
+
+    family.children.pull({ _id: req.params.childId });
+    await family.save();
+
+    res.json(family);
+  }
+  catch (error) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+
+// 13. עדכון שנת לימודים
+router.post('/update-year', async (req, res) => {
+  try{
+    const families = await Family.find({});
+
+    const gradeOrder = [
+      'מעון פעוטות (1200 ₪)',
+      'מעון ביניים (1200 ₪)',
+      'מעון בוגרים (1200 ₪)',
+      'גן גיל 3 (230 ₪)',
+      'גן גיל 4 (230 ₪)',
+      'גן גיל 5 (230 ₪)',
+      "כיתה א' (250 ₪)",
+      "כיתה ב' (250 ₪)",
+      "כיתה ג' (250 ₪)",
+      "כיתה ד' (250 ₪)",
+      "כיתה ה' (250 ₪)",
+      "כיתה ו' (300 ₪)",
+      "כיתה ז' (300 ₪)",
+      "כיתה ח' (300 ₪)"
+    ];
+
+    for (let family of families) {
+      if (Array.isArray(family.children) && family.children.length > 0) {
+        for (let child of family.children) {
+          let current = child.grade || '';
+          
+          if (current === 'בוגר / לטיפול') continue;
+
+          let currentIndex = gradeOrder.findIndex(item => {
+            if (current.includes('פעוטות') && item.includes('פעוטות')) return true;
+            if (current.includes('ביניים') && item.includes('ביניים')) return true;
+            if (current.includes('מעון בוגרים') && item.includes('מעון בוגרים')) return true;
+            if (current.includes('גיל 3') && item.includes('גיל 3')) return true;
+            if (current.includes('גיל 4') && item.includes('גיל 4')) return true;
+            if (current.includes('גיל 5') && item.includes('גיל 5')) return true;
+
+            const classMatch = current.match(/כיתה [א-ח]'/);
+            if (classMatch) {
+              return item.startsWith(classMatch[0]);
+            }
+            return false;
+          });
+
+          if (currentIndex !== -1) {
+            if (currentIndex + 1 < gradeOrder.length) {
+              const nextGrade = gradeOrder[currentIndex + 1];
+              child.grade = nextGrade;
+              child.price = getDefaultPriceByGrade(nextGrade);
+            } else {
+              child.grade = 'בוגר / לטיפול';
+            }
+          } else {
+            child.grade = 'בוגר / לטיפול';
+          }
+        }
+        family.markModified('children');
+        await family.save();
+      }
+    }
+
+    res.json({ message: 'שנת הלימודים עודכנה בהצלחה' });
+  }
+  catch (error) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+export default router;
