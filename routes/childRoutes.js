@@ -1,22 +1,11 @@
-import express from 'express';
-import {
-  getChildren,
-  getChildById,
-  updateChild,
-  deleteChild
-} from '../controllers/childController.js';
-import { protect, adminOnly } from '../middleware/auth.js';
+import express from 'express';//ספריית הבסיס ליצירת נתבי השרת
+import { createChild, updateChild, deleteChild } from '../controllers/childController.js';
+import { verifyAdmin } from '../middleware/auth.js';//רכיב  שמוודא שרק מנהלים מורשים יכולים לבצע את הפעולות האלו
 
-const router = express.Router();
+const router = express.Router();//יצירת ראוטר
 
-// נתיב לקבלת כל הילדים
-router.route('/')
-  .get(protect, getChildren);
+router.post('/', verifyAdmin, createChild);//נתיב ליצירת ילד חדש
+router.put('/:id', verifyAdmin, updateChild);//נתיב לעדכון פרטי ילד קיים
+router.delete('/:id', verifyAdmin, deleteChild);//נתיב למחיקת ילד
 
-// נתיבים לפי מזהה ילד ספציפי - צפייה, עדכון ומחיקה
-router.route('/:id')
-  .get(protect, getChildById)
-  .put(protect, adminOnly, updateChild)
-  .delete(protect, adminOnly, deleteChild);
-
-export default router;
+export default router;//יצוא הראוטר שיתחבר לשרת
