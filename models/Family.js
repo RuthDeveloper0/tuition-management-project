@@ -1,43 +1,109 @@
 import mongoose from 'mongoose';
-import childSchema from './Child.js';
+import bcrypt from 'bcrypt';
+
 
 const familySchema = new mongoose.Schema({
   familyName: {
     type: String,
-    required: [true, 'נא להזין שם משפחה'],
-    trim: true
-  },
-  parentName: {
-    type: String,
-    required: [true, 'נא להזין שם ההורה'],
-    trim: true
-  },
-  phone: {
-    type: String,
-    required: [true, 'נא להזין מספר טלפון'],
-    trim: true
-  },
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
     required: true
+   },
+
+  username: { 
+    type: String,
+     default: ''
+   },
+
+  familyCode: { 
+    type: String, 
+    default: '' 
   },
-  children: [childSchema], // מערך אובייקטים של ילדים
-  monthlyTotal: {
-    type: Number,
-    default: 0
-  }
+
+  code: { 
+    type: String, 
+    default: '' 
+  }, // קוד מקוצר ייחודי המוצג בטבלה
+
+  password: { 
+    type: String, 
+    default: '' 
+  },
+
+  fatherName: { 
+    type: String, 
+    default: '' 
+  },
+
+  motherName: { 
+    type: String, 
+    default: '' 
+  },
+
+  fatherPhone: { 
+    type: String, 
+    default: '' 
+  },
+
+  motherPhone: { 
+    type: String, 
+    default: '' 
+  },
+
+  paymentStatus: { 
+    type: Boolean, 
+    default: true 
+  },
+
+  notes: { 
+    type: String, 
+    default: '' 
+  },
+
+  files: [{ type: String }],
+
+  children: [{
+    name: { 
+      type: String, 
+      required: true },
+
+    grade: { 
+      type: String },
+
+    price: { 
+      type: Number }
+  }]
+  
 }, { timestamps: true });
 
-// חישוב מחדש של המחיר המשוקלל לפני כל שמירה
-familySchema.pre('save', function(next) {
-  if (this.children && this.children.length > 0) {
-    this.monthlyTotal = this.children.reduce((sum, child) => sum + (child.price || 0), 0);
-  } else {
-    this.monthlyTotal = 0;
+// Pre-save hook ליצירת קוד מקוצר והצפנת סיסמה
+familySchema.pre('save', async function (next) {
+  // 1. יצירת קוד מקוצר בן 6 תווים במידה ולא קיים
+  if (!this.code && this._id) {
+    this.code = this._id.toString().substring(18).toUpperCase();
   }
-  next();
+
+  // 2. הצפנת סיסמה במידה והיא שונתה
+  if (!this.isModified('password') || !this.password) {
+    return next();
+  }
+
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (err) {
+    next(err);
+  }
 });
 
-const Family = mongoose.model('Family', familySchema);
-export default Family;
+// מתודה לאימות סיסמה בעת התחברות
+familySchema.methods.comparePassword = async function (candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
+
+export default mongoose.model('Family', familySchema);
+
+
+
+
+
+
