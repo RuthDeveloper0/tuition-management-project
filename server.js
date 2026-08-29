@@ -32,9 +32,9 @@ app.use(express.json());
 // Logger מותאם אישית למעקב אחר בקשות
 app.use(customLogger);
 
-// הגדרת תיקיית uploads ותיקיית public כתיקיות סטטיות
+// הגדרת תיקיית uploads ותיקיית client כתיקיות סטטיות
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'client')));
 
 // חיבור נתיבי ה-API
 app.use('/api/system', systemRoutes);

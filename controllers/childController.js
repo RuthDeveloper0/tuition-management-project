@@ -27,7 +27,7 @@ export const updateChild = async (req, res) => {
 };
 
 
-//פונקציה למחיקת רכב
+//פונקציה למחיקת ילד
 export const deleteChild = async (req, res) => {
   try{
     await Child.findByIdAndDelete(req.params.id);
