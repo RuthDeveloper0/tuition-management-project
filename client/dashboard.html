@@ -1,43 +1,151 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>מערכת ניהול - לוח בקרה</title>
-    <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>מערכת ניהול שכר לימוד</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <header class="main-header">
-        <h1>מערכת ניהול תשלומי לימוד</h1>
-        <button id="logoutBtn" class="btn-secondary">התנתק</button>
+  <div class="container">
+    <header>
+      <h1>מערכת ניהול שכר לימוד</h1>
+      <div class="header-buttons">
+        <button class="btn btn-secondary" onclick="updateYear()">עדכון שנה</button>
+      </div>
     </header>
 
-    <main class="container">
-        <section class="actions-panel">
-            <h2>רשימת משפחות</h2>
-            <button id="addFamilyBtn" class="btn-primary">+ הוספת משפחה</button>
-        </section>
+    <div class="actions-bar">
+      <div class="search-container">
+        <input type="text" id="searchInput" class="search-input" placeholder="חיפוש לפי שם משפחה..." oninput="renderFamilies()">
+        <label class="checkbox-label" for="filterAttentionCheckbox">
+          <input type="checkbox" id="filterAttentionCheckbox" onchange="renderFamilies()">
+          הצג רק משפחות לטיפול
+        </label>
+      </div>
+      <button class="btn" onclick="openAddFamilyModal()">הוסף משפחה חדשה</button>
+    </div>
 
-        <section class="data-table-container">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>שם משפחה</th>
-                        <th>שם הורה</th>
-                        <th>טלפון</th>
-                        <th>מספר ילדים</th>
-                        <th>סה"כ מחיר</th>
-                        <th>פעולות</th>
-                    </tr>
-                </thead>
-                <tbody id="familiesTableBody">
-                    <!-- הנתונים יוזנו לכאן באמצעות JavaScript -->
-                </tbody>
-            </table>
-        </section>
-    </main>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>מס</th>
+            <th>שם משפחה</th>
+            <th>שמות ההורים</th>
+            <th>טלפון אבא</th>
+            <th>טלפון אמא</th>
+            <th>תשלום חודשי</th>
+            <th>ירד התשלום</th>
+            <th>הערות</th>
+            <th>פעולות</th>
+          </tr>
+        </thead>
+        <tbody id="familiesTableBody"></tbody>
+      </table>
+    </div>
+  </div>
 
-    <script src="js/services/api.js"></script>
-    <script src="js/dashboard.js"></script>
+  <!-- מודאל הוספת/עריכת משפחה -->
+  <div id="familyModal" class="modal hidden">
+    <div class="modal-content">
+      <h3 id="familyModalTitle">ניהול משפחה</h3>
+      <input type="hidden" id="editFamilyId">
+      
+      <div class="form-group">
+        <label>שם משפחה:</label>
+        <input type="text" id="familyNameInput">
+      </div>
+      <div class="form-group">
+        <label>שם האב:</label>
+        <input type="text" id="fatherNameInput">
+      </div>
+      <div class="form-group">
+        <label>שם האם:</label>
+        <input type="text" id="motherNameInput">
+      </div>
+      <div class="form-group">
+        <label>טלפון אבא:</label>
+        <input type="text" id="fatherPhoneInput">
+      </div>
+      <div class="form-group">
+        <label>טלפון אמא:</label>
+        <input type="text" id="motherPhoneInput">
+      </div>
+      <div class="form-group">
+        <label>הערות:</label>
+        <input type="text" id="notesInput">
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('familyModal')">ביטול</button>
+        <button class="btn" onclick="submitFamily()">שמור</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- מודאל ניהול ילד -->
+  <div id="childModal" class="modal hidden">
+    <div class="modal-content">
+      <h3 id="childModalTitle">ניהול ילד</h3>
+      <input type="hidden" id="childFamilyId">
+      <input type="hidden" id="editChildId">
+      
+      <div class="form-group">
+        <label>שם הילד/ה:</label>
+        <input type="text" id="childNameInput">
+      </div>
+
+      <div class="form-group">
+        <label>שכבת גיל / כיתה:</label>
+        <select id="childGradeSelect" onchange="handleGradeChange()">
+          <option value="מעון פעוטות (1200 ₪)">מעון פעוטות (1200 ₪)</option>
+          <option value="מעון ביניים (1200 ₪)">מעון ביניים (1200 ₪)</option>
+          <option value="מעון בוגרים (1200 ₪)">מעון בוגרים (1200 ₪)</option>
+          <option value="גן גיל 3 (230 ₪)">גן גיל 3 (230 ₪)</option>
+          <option value="גן גיל 4 (230 ₪)">גן גיל 4 (230 ₪)</option>
+          <option value="גן גיל 5 (230 ₪)">גן גיל 5 (230 ₪)</option>
+          <option value="כיתה א' (250 ₪)">כיתה א' (250 ₪)</option>
+          <option value="כיתה ב' (250 ₪)">כיתה ב' (250 ₪)</option>
+          <option value="כיתה ג' (250 ₪)">כיתה ג' (250 ₪)</option>
+          <option value="כיתה ד' (250 ₪)">כיתה ד' (250 ₪)</option>
+          <option value="כיתה ה' (250 ₪)">כיתה ה' (250 ₪)</option>
+          <option value="כיתה ו' (300 ₪)">כיתה ו' (300 ₪)</option>
+          <option value="כיתה ז' (300 ₪)">כיתה ז' (300 ₪)</option>
+          <option value="כיתה ח' (300 ₪)">כיתה ח' (300 ₪)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>מחיר מותאם אישית (אופציונלי):</label>
+        <input type="number" id="childPriceInput" placeholder="מחיר ברירת מחדל לפי כיתה">
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('childModal')">ביטול</button>
+        <button class="btn" onclick="submitChild()">שמור ילד</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- מודאל העלאת קבצים למשפחה -->
+  <div id="uploadFileModal" class="modal hidden">
+    <div class="modal-content">
+      <h3>העלאת קבצים למשפחה</h3>
+      <input type="hidden" id="uploadFamilyId">
+      
+      <div class="form-group">
+        <label>בחר קבצים להעלאה:</label>
+        <input type="file" id="familyFilesInput" multiple>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('uploadFileModal')">ביטול</button>
+        <button class="btn" onclick="submitFiles()">העלה קבצים</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/dashboard.js"></script>
 </body>
 </html>
