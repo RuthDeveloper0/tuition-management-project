@@ -25,13 +25,10 @@ app.use(express.urlencoded({ extended: true }));
 const clientPath = path.join(__dirname, 'client');
 app.use(express.static(clientPath));
 
-<<<<<<< HEAD
 // הגדרת תיקיית uploads ותיקיית client כתיקיות סטטיות
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static(path.join(__dirname, 'client')));
-=======
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
->>>>>>> 0e2bbd0ea7a60aee75af405a6ad5341e8036e175
 
 // API Routes
 app.use('/api/auth', authRoutes);

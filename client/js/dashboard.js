@@ -2,7 +2,7 @@
 function renderFamilies(families) {
      const tbody = document.getElementById('familiesTableBody');
      tbody.innerHTML = '';
-}
+
 
 families.forEach(family => {
     // חישוב סך תשלום חודשי למשפחה
@@ -30,6 +30,7 @@ families.forEach(family => {
     `;
 
     tbody.appendChild(tr);
+    
 
     // שורת פירוט הילדים
     if (Array.isArray(family.children) && family.children.length > 0) {
@@ -56,6 +57,7 @@ families.forEach(family => {
       tbody.appendChild(childTr);
     }
   });
+}
 
   // עדכון פרטי ילד מול השרת
 async function updateChild(familyId, childId, newName, newGrade, newPrice) {
