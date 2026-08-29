@@ -1,101 +1,53 @@
-import User from '../models/User.js';
-import jwt from 'jsonwebtoken';
+// ייבוא מודל הילד (Child) מתיקיית המודלים
+import Child from '../models/Child.js';
 
-// פונקציית עזר ליצירת JWT Token כולל id ו-role
-const generateToken = (id, role) => {
-  return jwt.sign(
-    { id, role },
-    process.env.JWT_SECRET || 'fallback_secret',
-    { expiresIn: '30d' }
-  );
+// מיפוי שמגדיר לכל קבוצת גיל נוכחית מהי קבוצת הגיל הבאה אליה הילד יעבור
+const nextAgeGroupMap = {
+  'מעון פעוטות': 'מעון ביניים',
+  'מעון ביניים': 'מעון בוגרים',
+  'מעון בוגרים': 'גן גיל 3',
+  'גן גיל 3': 'גן גיל 4',
+  'גן גיל 4': 'גן גיל 5',
+  'גן גיל 5': 'כיתה א\'',
+  'כיתה א\'': 'כיתה ב\'',
+  'כיתה ב\'': 'כיתה ג\'',
+  'כיתה ג\'': 'כיתה ד\'',
+  'כיתה ד\'': 'כיתה ה\'',
+  'כיתה ה\'': 'כיתה ו\'',
+  'כיתה ו\'': 'כיתה ז\'',
+  'כיתה ז\'': 'כיתה ח\'',
+  'כיתה ח\'': 'חריגה / למחיקה',
+  'חריגה / למחיקה': 'חריגה / למחיקה'
 };
 
-// 1. הרשמת משתמש חדש
-export const registerUser = async (req, res) => {
+/**
+ * פונקציה לקידום כל הילדים במערכת בשנת לימודים אחת.
+ * הפונקציה עוברת על כל הילדים במסד הנתונים ומעדכנת את קבוצת הגיל שלהם.
+ */
+export const advanceYear = async (req, res) => {
   try {
-    const { username, email, password, role } = req.body;
+    // שליפת כל רשומות הילדים ממסד הנתונים
+    const children = await Child.find();
 
-    if (!username || !email || !password) {
-      return res.status(400).json({ message: 'נא למלא את כל השדות: שם משתמש, אימייל וסיסמה' });
+    // מעבר בלולאה על כל ילד ועדכון קבוצת הגיל שלו
+    for (let child of children) {
+      // מציאת קבוצת הגיל הבאה לפי המיפוי; אם לא נמצאה התאמה, נשארת קבוצת הגיל הנוכחית
+      const nextGroup = nextAgeGroupMap[child.ageGroup] || child.ageGroup;
+      child.ageGroup = nextGroup;
+
+      // אם הילד הגיע לקבוצת חריגה/למחיקה, מסמנים אותו לטיפול/למחיקה
+      if (nextGroup === 'חריגה / למחיקה') {
+        child.markedForAction = true;
+      }
+
+      // שמירת השינויים עבור הילד הנוכחי במסד הנתונים
+      await child.save();
     }
 
-    const userExists = await User.findOne({ $or: [{ email }, { username }] });
-    if (userExists) {
-      return res.status(400).json({ message: 'שם משתמש או אימייל כבר קיימים במערכת' });
-    }
-
-    // יצירת המשתמש — ה-Pre-Hook ב-User.js יצפין את הסיסמה אוטומטית!
-    const user = await User.create({
-      username,
-      email,
-      password,
-      role: role || 'parent'
-    });
-
-    const token = generateToken(user._id, user.role);
-
-    res.status(201).json({
-      _id: user._id,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      token
-    });
+    // החזרת תגובת הצלחה ללקוח
+    res.json({ message: 'עדכון השנה בוצע בהצלחה לכל הילדים' });
   } catch (error) {
-    console.error('Registration Error:', error);
-    res.status(500).json({ message: 'שגיאת שרת בהרשמה', error: error.message });
-  }
-};
-
-// 2. התחברות משתמש
-export const loginUser = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ message: 'נא להזין אימייל וסיסמה' });
-    }
-
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: 'פרטי התחברות שגויים' });
-    }
-
-    // שימוש במתודה comparePassword מהמודל User.js
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(400).json({ message: 'פרטי התחברות שגויים' });
-    }
-
-    const token = generateToken(user._id, user.role);
-
-    res.json({
-      _id: user._id,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      token
-    });
-  } catch (error) {
-    console.error('Login Error:', error);
-    res.status(500).json({ message: 'שגיאת שרת בהתחברות', error: error.message });
-  }
-};
-
-// 3. קבלת פרטי המשתמש המחובר (getMe)
-export const getMe = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id).select('-password');
-    if (!user) {
-      return res.status(404).json({ message: 'משתמש לא נמצא' });
-    }
-
-    res.status(200).json({
-      success: true,
-      data: user
-    });
-  } catch (error) {
-    console.error('GetMe Error:', error);
-    res.status(500).json({ message: 'שגיאת שרת בקבלת נתוני משתמש', error: error.message });
+    // הטיפול בשגיאות במידה ומשהו נכשל במהלך התהליך
+    res.status(500).json({ message: 'שגיאה בביצוע עדכון שנה', error: error.message });
   }
 };

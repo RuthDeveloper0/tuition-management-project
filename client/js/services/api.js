@@ -4,7 +4,10 @@ window.apiFetch = async function(endpoint, method = 'GET', body = null) {
   const token = localStorage.getItem('token');
   const headers = {};
 
+<<<<<<< HEAD
   
+=======
+>>>>>>> 0e2bbd0ea7a60aee75af405a6ad5341e8036e175
   if (body && !(body instanceof FormData)) {
     headers['Content-Type'] = 'application/json';
   }

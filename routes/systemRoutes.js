@@ -1,12 +1,9 @@
 import express from 'express';
-import { registerUser, loginUser } from '../controllers/systemController.js';
+import { advanceYear } from '../controllers/systemController.js';
+import { verifyAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// נתיב להרשמה
-router.post('/register', registerUser);
-
-// נתיב להתחברות
-router.post('/login', loginUser);
+router.post('/advance-year', verifyAdmin, advanceYear);
 
 export default router;
