@@ -1,29 +1,74 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>מערכת ניהול - התחברות</title>
-    <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>מערכת ניהול - התחברות</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body class="auth-body">
-    <div class="login-container">
-        <h2>התחברות למערכת</h2>
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="email">אימייל:</label>
-                <input type="email" id="email" required placeholder="user@example.com">
-            </div>
-            <div class="form-group">
-                <label for="password">סיסמה:</label>
-                <input type="password" id="password" required placeholder="******">
-            </div>
-            <button type="submit" class="btn-primary">התחבר</button>
-        </form>
-        <div id="loginMessage" class="message"></div>
+<body>
+
+  <h1 class="main-title">מערכת ניהול שכר לימוד</h1>
+
+  <div class="cards-container">
+    
+    <!-- כרטיס 1: כניסת מנהל -->
+    <div class="login-card">
+      <h2>כניסת מנהל</h2>
+      <form id="adminLoginForm">
+        <div class="form-group">
+          <label>שם משתמש מנהל:</label>
+          <input type="text" id="adminUsername" placeholder="הזן שם משתמש" required />
+        </div>
+        <div class="form-group">
+          <label>סיסמת מנהל:</label>
+          <input type="password" id="adminPassword" placeholder="הזן סיסמה" required />
+        </div>
+        <button type="submit" class="btn">התחבר כמנהל</button>
+      </form>
     </div>
 
-    <script src="js/services/api.js"></script>
-    <script src="js/auth.js"></script>
+    <!-- כרטיס 2: כניסת/הרשמת הורה -->
+    <div class="login-card">
+      
+      <!-- טופס התחברות הורה -->
+      <div id="parentLoginView">
+        <h2>כניסת הורה</h2>
+        <form id="parentLoginForm">
+          <div class="form-group">
+            <label>שם משתמש:</label>
+            <input type="text" id="parentLoginUsername" placeholder="הזן שם משתמש" required />
+          </div>
+          <div class="form-group">
+            <label>סיסמה (הקוד הייחודי):</label>
+            <input type="password" id="parentLoginPassword" placeholder="הזן קוד ייחודי" required />
+          </div>
+          <button type="submit" class="btn">התחבר כהורה</button>
+        </form>
+        <div class="toggle-link" onclick="toggleParentForm('register')">טרם נרשמת? לחץ כאן להרשמה ראשונית</div>
+      </div>
+
+      <!-- טופס הרשמת הורה -->
+      <div id="parentRegisterView" class="hidden">
+        <h2>הרשמת הורה ראשונית</h2>
+        <form id="parentRegisterForm">
+          <div class="form-group">
+            <label>בחר שם משתמש:</label>
+            <input type="text" id="parentRegUsername" placeholder="שם משתמש לבחירתך" required />
+          </div>
+          <div class="form-group">
+            <label>קוד ייחודי (מהטבלה):</label>
+            <input type="text" id="parentRegCode" placeholder="הזן קוד ייחודי" required />
+          </div>
+          <button type="submit" class="btn">הירשם למערכת</button>
+        </form>
+        <div class="toggle-link" onclick="toggleParentForm('login')">כבר רשום? לחץ כאן להתחברות</div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script src="/js/services/auth.js"></script>
 </body>
 </html>

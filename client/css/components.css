@@ -238,3 +238,82 @@ tr.family-needs-attention {
   margin-top: 4px;
   display: block;
 }
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: #f1f5f9;
+  margin: 0;
+  padding: 40px 16px;
+  direction: rtl;
+}
+.main-title {
+  text-align: center;
+  color: #0f172a;
+  margin-bottom: 32px;
+}
+.cards-container {
+  display: flex;
+  gap: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.login-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 32px 24px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+}
+.login-card h2 {
+  margin-top: 0;
+  color: #1e293b;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 12px;
+  font-size: 20px;
+}
+.form-group {
+  margin-bottom: 16px;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  font-size: 14px;
+  color: #334155;
+}
+.form-group input {
+  width: 100%;
+  padding: 10px 12px;
+  box-sizing: border-box;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 14px;
+}
+.btn {
+  background-color: #1e293b;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  width: 100%;
+  font-size: 15px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+.btn:hover {
+  background-color: #0f172a;
+}
+.toggle-link {
+  margin-top: 12px;
+  text-align: center;
+  color: #2563eb;
+  cursor: pointer;
+  font-size: 13px;
+}
+.hidden { display: none; }
