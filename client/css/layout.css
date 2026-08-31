@@ -27,15 +27,139 @@ header {
   padding-bottom: 20px;
 }
 
-header h1 {
+header h1, h2, h3 {
   margin: 0;
-  font-size: 22px;
-  font-weight: 700;
   color: var(--primary-color);
-  letter-spacing: -0.3px;
 }
 
 .header-buttons {
   display: flex;
   gap: 10px;
+}
+
+.actions-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.search-container {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.search-input {
+  padding: 9px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  width: 260px;
+  font-size: 14px;
+  color: var(--text-main);
+  background-color: #fff;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.table-wrapper {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: right;
+  font-size: 14px;
+}
+
+th {
+  background-color: #f8fafc;
+  color: var(--text-muted);
+  font-weight: 600;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-main);
+  vertical-align: middle;
+}
+
+tbody tr:hover {
+  background-color: #fafafa;
+}
+
+tr.family-needs-attention {
+  background-color: var(--warning-bg) !important;
+}
+
+.children-row {
+  display: none;
+  background-color: #f8fafc;
+}
+
+.children-row.active {
+  display: table-row;
+}
+
+.children-wrapper {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  background-color: #f8fafc;
+}
+
+.children-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.children-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.children-list li {
+  display: flex;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid #edf2f7;
+  font-size: 13px;
+}
+
+.files-badge {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  display: block;
+}
+
+.toggle-arrow {
+  cursor: pointer;
+  display: inline-block;
+  transition: transform 0.2s ease;
+  user-select: none;
+  margin-left: 8px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.toggle-arrow.open {
+  transform: rotate(-90deg);
+  color: var(--text-main);
 }
