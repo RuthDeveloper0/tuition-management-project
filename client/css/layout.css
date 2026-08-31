@@ -163,3 +163,10 @@ tr.family-needs-attention {
   transform: rotate(-90deg);
   color: var(--text-main);
 }
+
+ body { padding: 40px 16px; }
+    .main-title { text-align: center; color: #0f172a; margin-bottom: 32px; }
+    .cards-container { display: flex; gap: 24px; max-width: 900px; margin: 0 auto; justify-content: center; flex-wrap: wrap; }
+    .login-card { background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 32px 24px; width: 100%; max-width: 400px; box-shadow: var(--shadow-sm); box-sizing: border-box; }
+    .login-card h2 { margin-top: 0; color: var(--primary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 12px; font-size: 20px; }
+    .toggle-link { margin-top: 12px; text-align: center; color: var(--accent-color); cursor: pointer; font-size: 13px; }

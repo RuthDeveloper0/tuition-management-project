@@ -70,3 +70,8 @@
   cursor: pointer;
   accent-color: var(--success-color);
 }
+
+.portal-container { max-width: 600px; margin: 0 auto; }
+    .card { border: 1px solid var(--border-color); padding: 16px; border-radius: var(--radius-sm); margin-top: 12px; background-color: #f8fafc; }
+    .btn-danger { background-color: var(--danger-color); color: white; border: none; padding: 10px 16px; border-radius: var(--radius-sm); cursor: pointer; margin-top: 20px; width: 100%; font-weight: 600; font-size: 15px; }
+    .btn-danger:hover { background-color: #b91c1c; }
