@@ -4,17 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>אזור אישי להורים</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .portal-container { max-width: 600px; margin: 0 auto; }
+    .card { border: 1px solid var(--border-color); padding: 16px; border-radius: var(--radius-sm); margin-top: 12px; background-color: #f8fafc; }
+    .btn-danger { background-color: var(--danger-color); color: white; border: none; padding: 10px 16px; border-radius: var(--radius-sm); cursor: pointer; margin-top: 20px; width: 100%; font-weight: 600; font-size: 15px; }
+    .btn-danger:hover { background-color: #b91c1c; }
+  </style>
 </head>
 <body>
-  <div class="container">
+  <div class="container portal-container">
     <h2>אזור אישי להורה</h2>
     
     <div id="familyDetails" class="card">
       <p>טוען נתונים...</p>
     </div>
 
-    <h3>ילדים רשומים במערכת</h3>
+    <h3 style="margin-top: 24px;">ילדים רשומים במערכת</h3>
     <div id="childrenDetails" class="card">
       <p>טוען נתונים...</p>
     </div>
@@ -22,6 +28,6 @@
     <button class="btn-danger" onclick="logout()">התנתק</button>
   </div>
 
-  <script src="js/parent-portal.js"></script>
+  <script src="/js/services/parent-portal.js"></script>
 </body>
 </html>

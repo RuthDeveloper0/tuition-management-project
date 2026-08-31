@@ -4,7 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>מערכת ניהול - התחברות</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body { padding: 40px 16px; }
+    .main-title { text-align: center; color: #0f172a; margin-bottom: 32px; }
+    .cards-container { display: flex; gap: 24px; max-width: 900px; margin: 0 auto; justify-content: center; flex-wrap: wrap; }
+    .login-card { background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 32px 24px; width: 100%; max-width: 400px; box-shadow: var(--shadow-sm); box-sizing: border-box; }
+    .login-card h2 { margin-top: 0; color: var(--primary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 12px; font-size: 20px; }
+    .toggle-link { margin-top: 12px; text-align: center; color: var(--accent-color); cursor: pointer; font-size: 13px; }
+  </style>
 </head>
 <body>
 
@@ -24,7 +32,7 @@
           <label>סיסמת מנהל:</label>
           <input type="password" id="adminPassword" placeholder="הזן סיסמה" required />
         </div>
-        <button type="submit" class="btn">התחבר כמנהל</button>
+        <button type="submit" class="btn" style="width: 100%; margin-top: 8px;">התחבר כמנהל</button>
       </form>
     </div>
 
@@ -43,7 +51,7 @@
             <label>סיסמה (הקוד הייחודי):</label>
             <input type="password" id="parentLoginPassword" placeholder="הזן קוד ייחודי" required />
           </div>
-          <button type="submit" class="btn">התחבר כהורה</button>
+          <button type="submit" class="btn" style="width: 100%; margin-top: 8px;">התחבר כהורה</button>
         </form>
         <div class="toggle-link" onclick="toggleParentForm('register')">טרם נרשמת? לחץ כאן להרשמה ראשונית</div>
       </div>
@@ -60,7 +68,7 @@
             <label>קוד ייחודי (מהטבלה):</label>
             <input type="text" id="parentRegCode" placeholder="הזן קוד ייחודי" required />
           </div>
-          <button type="submit" class="btn">הירשם למערכת</button>
+          <button type="submit" class="btn" style="width: 100%; margin-top: 8px;">הירשם למערכת</button>
         </form>
         <div class="toggle-link" onclick="toggleParentForm('login')">כבר רשום? לחץ כאן להתחברות</div>
       </div>
