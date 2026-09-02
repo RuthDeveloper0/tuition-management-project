@@ -1,3 +1,4 @@
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background-color: var(--bg-color);
@@ -12,11 +13,13 @@ body {
   max-width: 1100px;
   margin: 0 auto;
   background: var(--card-bg);
-  padding: 32px;
+  padding: 60px 32px 32px 32px; 
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
   border: 1px solid var(--border-color);
 }
+
+
 
 header {
   display: flex;
@@ -35,6 +38,9 @@ header h1, h2, h3 {
 .header-buttons {
   display: flex;
   gap: 10px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
 }
 
 .actions-bar {
@@ -170,3 +176,73 @@ tr.family-needs-attention {
     .login-card { background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 32px 24px; width: 100%; max-width: 400px; box-shadow: var(--shadow-sm); box-sizing: border-box; }
     .login-card h2 { margin-top: 0; color: var(--primary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 12px; font-size: 20px; }
     .toggle-link { margin-top: 12px; text-align: center; color: var(--accent-color); cursor: pointer; font-size: 13px; }
+
+    /* עיצוב כפתור עדכון שנה שיהיה זהה לחלוטין לכפתור הוספת משפחה */
+#updateYearBtn {
+  background-color: var(--primary-color) ;
+  color: #ffffff;
+  border: none ;
+  border-radius: var(--radius-sm);
+  padding: 9px 18px ;
+  font-weight: 500 ;
+  font-size: 14px ;
+  cursor: pointer ;
+  box-shadow: none ;
+  outline: none ;
+}
+
+#updateYearBtn:hover,
+#updateYearBtn:active,
+#updateYearBtn:focus {
+  background-color: var(--primary-color) ;
+  color: #ffffff ;
+  box-shadow: none ;
+  outline: none ;
+}
+
+/* מעטפת חיצונית לכותרת שממרכזת אותה מעל הקופסה הלבנה */
+.header-outer-wrapper {
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 0 20px 0;
+  display: flex;
+  justify-content: center;
+}
+
+/* הגדרות ה-Header עצמו */
+.main-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  margin: 0;
+  border: none;
+  padding: 0;
+  width: 100%;
+}
+
+/* הקבוצה של הלוגו והכותרת יחד במרכז */
+.header-title-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+/* גודל הלוגו */
+.header-logo {
+  height: 90px; 
+  object-fit: contain;
+}
+
+/* גודל הכותרת והצבע */
+.header-title {
+  color: var(--primary-color);
+  margin: 0;
+  font-size: 45px;
+  font-weight: bold;
+}
+

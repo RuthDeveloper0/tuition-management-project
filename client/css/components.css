@@ -71,7 +71,110 @@
   accent-color: var(--success-color);
 }
 
-.portal-container { max-width: 600px; margin: 0 auto; }
-    .card { border: 1px solid var(--border-color); padding: 16px; border-radius: var(--radius-sm); margin-top: 12px; background-color: #f8fafc; }
-    .btn-danger { background-color: var(--danger-color); color: white; border: none; padding: 10px 16px; border-radius: var(--radius-sm); cursor: pointer; margin-top: 20px; width: 100%; font-weight: 600; font-size: 15px; }
-    .btn-danger:hover { background-color: #b91c1c; }
+.portal-container {
+  max-width: 600px;
+  margin: 0 auto; 
+}
+
+.card {
+  border: 1px solid var(--border-color); 
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  margin-top: 12px; 
+  background-color: #f8fafc; 
+}
+
+.btn-danger { 
+  background-color: var(--danger-color);
+  color: white; border: none;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm); 
+  cursor: pointer; margin-top: 20px;
+  width: 100%; font-weight: 600; 
+  font-size: 15px;
+}
+
+.btn-danger:hover {
+  background-color: #94a3b8; 
+}
+
+/* איפוס שוליים לדף ומבנה גמיש לתחימת העמוד */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f8fafc;
+}
+
+/* עיצוב הפוטר שייצמד לתחתית ברוחב מלא */
+.site-footer {
+  width: 100%;
+  background-color: #0f172a !important; 
+  padding: 30px 20px;
+  color: #f1f5f9;
+  margin-top: auto;
+  box-sizing: border-box;
+}
+
+.footer-inner-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.footer-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  text-align: center;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+@media (max-width: 768px) {
+  .footer-container {
+    grid-template-columns: 1fr;
+    text-align: right;
+  }
+}
+
+.footer-col h4 {
+  color: #ffffff !important;
+  font-size: 16px;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.footer-col p {
+  margin: 6px 0;
+  font-size: 13px;
+  color: #cbd5e1 !important;
+}
+
+.footer-col a {
+  color: #93c5fd !important;
+  text-decoration: none;
+}
+
+.footer-col a:hover {
+  text-decoration: underline;
+}
+
+.footer-note {
+  font-style: italic;
+  color: #94a3b8 !important;
+  font-size: 12px;
+}
+
+.footer-bottom {
+  text-align: center;
+  color: #94a3b8 !important;
+  font-size: 12px;
+  margin-top: 16px;
+}

@@ -5,16 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>מערכת ניהול שכר לימוד</title>
   <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" href="/fav.ico.ico" type="image/x-icon">
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>מערכת ניהול שכר לימוד</h1>
-      <div class="header-buttons">
-        <button class="btn btn-secondary" onclick="updateYear()">עדכון שנה</button>
+
+  <!-- אזור הכותרת והלוגו (במרכז, נקי ללא כפתורים) -->
+  <div class="header-outer-wrapper">
+    <header class="main-header">
+      <div class="header-title-group">
+        <img src="/logo.jpg" alt="לוגו המוסד" class="header-logo">
+        <h1 class="header-title">מערכת ניהול שכר לימוד</h1>
       </div>
     </header>
+  </div>
 
+  <!-- הקופסה הלבנה המרכזית -->
+  <div class="container">
     <div class="actions-bar">
       <div class="search-container">
         <input type="text" id="searchInput" class="search-input" placeholder="חיפוש לפי שם משפחה..." oninput="renderFamilies()">
@@ -23,7 +29,11 @@
           הצג רק משפחות לטיפול
         </label>
       </div>
-      <button class="btn" onclick="openAddFamilyModal()">הוסף משפחה חדשה</button>
+      <!-- שני הכפתורים יושבים עכשיו יחד באותו שורה -->
+      <div class="header-buttons-group">
+        <button class="btn" id="updateYearBtn" onclick="updateYear()">עדכון שנה</button>
+        <button class="btn" onclick="openAddFamilyModal()">הוסף משפחה חדשה</button>
+      </div>
     </div>
 
     <div class="table-wrapper">
@@ -46,12 +56,39 @@
     </div>
   </div>
 
-  <!-- מודאל הוספת/עריכת משפחה -->
+  <!-- הפוטר -->
+  <footer class="site-footer">
+    <div class="footer-inner-wrapper">
+      <div class="footer-container">
+        <div class="footer-col">
+          <h4>שעות פעילות</h4>
+          <p><strong>ימים א'-ה':</strong> 8:00 עד 15:00</p>
+        </div>
+        
+        <div class="footer-col">
+          <h4>צור קשר</h4>
+          <p>📞 <strong>טלפון מזכירות:</strong> <a href="tel:0504187203" dir="ltr">050-4187203</a></p>
+          <p>✉️ <strong>מייל:</strong> <a href="mailto:r5799586@gmail.com">r5799586@gmail.com</a></p>
+        </div>
+
+        <div class="footer-col">
+          <h4>המיקום שלנו</h4>
+          <p>📍 רחוב אביעד 5, קרית הרצוג, בני ברק</p>
+          <p class="footer-note">מחכים לראותכם!</p>
+        </div>
+      </div>
+      
+      <div class="footer-bottom">
+        <p>© 2026 כל הזכויות שמורות | מערכת ניהול שכר לימוד</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- מודאלים -->
   <div id="familyModal" class="modal hidden">
     <div class="modal-content">
       <h3 id="familyModalTitle">ניהול משפחה</h3>
       <input type="hidden" id="editFamilyId">
-      
       <div class="form-group">
         <label>שם משפחה:</label>
         <input type="text" id="familyNameInput">
@@ -76,7 +113,6 @@
         <label>הערות:</label>
         <input type="text" id="notesInput">
       </div>
-
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeModal('familyModal')">ביטול</button>
         <button class="btn" onclick="submitFamily()">שמור</button>
@@ -84,18 +120,15 @@
     </div>
   </div>
 
-  <!-- מודאל ניהול ילד -->
   <div id="childModal" class="modal hidden">
     <div class="modal-content">
       <h3 id="childModalTitle">ניהול ילד</h3>
       <input type="hidden" id="childFamilyId">
       <input type="hidden" id="editChildId">
-      
       <div class="form-group">
         <label>שם הילד/ה:</label>
         <input type="text" id="childNameInput">
       </div>
-
       <div class="form-group">
         <label>שכבת גיל / כיתה:</label>
         <select id="childGradeSelect" onchange="handleGradeChange()">
@@ -115,12 +148,10 @@
           <option value="כיתה ח' (300 ₪)">כיתה ח' (300 ₪)</option>
         </select>
       </div>
-
       <div class="form-group">
         <label>מחיר מותאם אישית (אופציונלי):</label>
         <input type="number" id="childPriceInput" placeholder="מחיר ברירת מחדל לפי כיתה">
       </div>
-
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeModal('childModal')">ביטול</button>
         <button class="btn" onclick="submitChild()">שמור ילד</button>
@@ -128,24 +159,21 @@
     </div>
   </div>
 
-  <!-- מודאל העלאת קבצים למשפחה -->
   <div id="uploadFileModal" class="modal hidden">
     <div class="modal-content">
       <h3>העלאת קבצים למשפחה</h3>
       <input type="hidden" id="uploadFamilyId">
-      
       <div class="form-group">
         <label>בחר קבצים להעלאה:</label>
         <input type="file" id="familyFilesInput" multiple>
       </div>
-
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeModal('uploadFileModal')">ביטול</button>
         <button class="btn" onclick="submitFiles()">העלה קבצים</button>
       </div>
     </div>
   </div>
-
+  
   <script src="/js/dashboard.js"></script>
 </body>
 </html>
