@@ -57,8 +57,6 @@ function renderFamilies() {
       ? family.children.reduce((sum, child) => sum + (child.price || 0), 0)
       : 0;
 
-    const familyCode = family._id ? family._id.substring(family._id.length - 6).toUpperCase() : '-';
-
     const tr = document.createElement('tr');
     if (needsAttention) {
       tr.className = 'family-needs-attention';
@@ -86,7 +84,6 @@ function renderFamilies() {
       : '<span style="color:var(--danger-color); font-weight:600;">לא</span>';
 
     tr.innerHTML = `
-      <td><span style="font-family: monospace; color: var(--text-muted); font-size: 13px;">#${familyCode}</span></td>
       <td>${arrowHtml}<strong>${family.familyName}</strong> ${attentionBadge} ${filesLabel}</td>
       <td>${family.fatherName || ''} ${family.motherName ? 'ו' + family.motherName : ''}</td>
       <td>${family.fatherPhone || '-'}</td>
@@ -114,7 +111,7 @@ function renderFamilies() {
       childTr.className = 'children-row';
       childTr.id = `children-row-${family._id}`;
       
-      let expandedHtml = `<td colspan="9"><div class="children-wrapper">`;
+      let expandedHtml = `<td colspan="8"><div class="children-wrapper">`;
       
       if (hasChildren) {
         expandedHtml += `<div class="children-title">ילדי המשפחה:</div><ul class="children-list">`;
