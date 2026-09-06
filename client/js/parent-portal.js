@@ -17,13 +17,13 @@ async function loadMyFamilyData() {
         <p><strong>משפחת:</strong> ${family.familyName}</p>
         <p><strong>אבא:</strong> ${family.fatherName || '-'} (${family.fatherPhone || '-'})</p>
         <p><strong>אמא:</strong> ${family.motherName || '-'} (${family.motherPhone || '-'})</p>
-        <p><strong>סטטוס תשלום:</strong> ${family.paymentStatus ? 'שולם' : 'טרם ירד תשלום'}</p>
+        <p><strong>סטטוס תשלום:</strong> ${family.paymentStatus ? '<span style="color:var(--success-color); font-weight:600;">שולם</span>' : '<span style="color:var(--danger-color); font-weight:600;">טרם ירד תשלום</span>'}</p>
       `;
 
-      let childrenHtml = '<ul style="padding-right: 20px;">';
+      let childrenHtml = '<ul style="padding-right: 20px; margin: 0;">';
       if (family.children && family.children.length > 0) {
         family.children.forEach(child => {
-          childrenHtml += `<li><strong>${child.name}</strong> - כיתה: ${child.grade || '-'} | מחיר: ₪${child.price || 0}</li>`;
+          childrenHtml += `<li style="padding: 4px 0;"><strong>${child.name}</strong> — כיתה: ${child.grade || '-'} | מחיר: ₪${child.price || 0}</li>`;
         });
       } else {
         childrenHtml += '<li>לא נרשמו ילדים במערכת</li>';
@@ -44,4 +44,4 @@ function logout() {
   window.location.href = '/index.html';
 }
 
-loadMyFamilyData();
+document.addEventListener('DOMContentLoaded', loadMyFamilyData);

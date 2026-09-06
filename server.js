@@ -25,6 +25,9 @@ app.use(express.urlencoded({ extended: true }));
 const clientPath = path.join(__dirname, 'client');
 app.use(express.static(clientPath));
 
+// הגדרת תיקיית uploads ותיקיית client כתיקיות סטטיות
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(express.static(path.join(__dirname, 'client')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // API Routes
