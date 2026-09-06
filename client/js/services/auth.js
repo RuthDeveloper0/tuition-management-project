@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const parentLoginForm = document.getElementById('parentLoginForm');
   const parentRegisterForm = document.getElementById('parentRegisterForm');
 
+  // התחברות מנהל
   if (adminLoginForm) {
     adminLoginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -44,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // הרשמת הורה - שולח אך ורק username ו-password
   if (parentRegisterForm) {
     parentRegisterForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -60,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await response.json();
 
         if (response.ok) {
-          alert('ההרשמה בוצעה בהצלחה! כעת תוכל להתחבר.');
+          alert('ההרשמה בוצעה בהצלחה! כעת ניתן להתחבר.');
           toggleParentForm('login');
         } else {
           alert('שגיאה: ' + data.message);
@@ -71,6 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // התחברות הורה
   if (parentLoginForm) {
     parentLoginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -88,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (response.ok) {
           localStorage.setItem('parentToken', data.token);
-          localStorage.setItem('role', 'client');
+          localStorage.setItem('role', data.role || 'client');
           window.location.href = '/parent-portal.html';
         } else {
           alert('שגיאה: ' + data.message);

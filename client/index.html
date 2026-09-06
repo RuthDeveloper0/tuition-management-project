@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>מערכת ניהול - התחברות</title>
   <link rel="stylesheet" href="/css/style.css">
-<link rel="icon" href="/fav.ico.ico" type="image/x-icon">
+  <link rel="icon" href="/fav.ico.ico" type="image/x-icon">
 </head>
 <body>
 
@@ -13,7 +13,7 @@
 
   <div class="cards-container">
     
-    <!-- כרטיס 1: כניסת מנהל -->
+    <!-- כניסת מנהל -->
     <div class="login-card">
       <h2>כניסת מנהל</h2>
       <form id="adminLoginForm">
@@ -29,7 +29,7 @@
       </form>
     </div>
 
-    <!-- כרטיס 2: כניסת/הרשמת הורה -->
+    <!-- כניסת / הרשמת הורה -->
     <div class="login-card">
       
       <!-- טופס התחברות הורה -->
@@ -41,25 +41,25 @@
             <input type="text" id="parentLoginUsername" placeholder="הזן שם משתמש" required />
           </div>
           <div class="form-group">
-            <label>סיסמה (הקוד הייחודי):</label>
-            <input type="password" id="parentLoginPassword" placeholder="הזן קוד ייחודי" required />
+            <label>סיסמה:</label>
+            <input type="password" id="parentLoginPassword" placeholder="הזן סיסמה" required />
           </div>
           <button type="submit" class="btn" style="width: 100%; margin-top: 8px;">התחבר כהורה</button>
         </form>
         <div class="toggle-link" onclick="toggleParentForm('register')">טרם נרשמת? לחץ כאן להרשמה ראשונית</div>
       </div>
 
-      <!-- טופס הרשמת הורה -->
+      <!-- טופס הרשמת הורה (ללא שדה שם משפחה במערכת) -->
       <div id="parentRegisterView" class="hidden">
-        <h2>הרשמת הורה ראשונית</h2>
+        <h2>הרשמת הורה</h2>
         <form id="parentRegisterForm">
           <div class="form-group">
             <label>בחר שם משתמש:</label>
             <input type="text" id="parentRegUsername" placeholder="שם משתמש לבחירתך" required />
           </div>
           <div class="form-group">
-            <label>קוד ייחודי (מהטבלה):</label>
-            <input type="text" id="parentRegCode" placeholder="הזן קוד ייחודי" required />
+            <label>בחר סיסמה:</label>
+            <input type="password" id="parentRegPassword" placeholder="סיסמה לבחירתך" required />
           </div>
           <button type="submit" class="btn" style="width: 100%; margin-top: 8px;">הירשם למערכת</button>
         </form>
