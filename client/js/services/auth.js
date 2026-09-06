@@ -48,13 +48,13 @@ document.addEventListener('DOMContentLoaded', () => {
     parentRegisterForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const username = document.getElementById('parentRegUsername').value.trim();
-      const uniqueCode = document.getElementById('parentRegCode').value.trim();
+      const password = document.getElementById('parentRegPassword').value.trim();
 
       try {
         const response = await fetch('/api/families/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, uniqueCode })
+          body: JSON.stringify({ username, password })
         });
 
         const data = await response.json();

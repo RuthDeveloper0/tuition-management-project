@@ -84,11 +84,11 @@ function renderFamilies() {
       : '<span style="color:var(--danger-color); font-weight:600;">לא</span>';
 
     tr.innerHTML = `
-      <td>${arrowHtml}<strong>${family.familyName}</strong> ${attentionBadge} ${filesLabel}</td>
+      <td>${arrowHtml}${family.familyName} ${attentionBadge} ${filesLabel}</td>
       <td>${family.fatherName || ''} ${family.motherName ? 'ו' + family.motherName : ''}</td>
       <td>${family.fatherPhone || '-'}</td>
       <td>${family.motherPhone || '-'}</td>
-      <td><strong>₪ ${totalMonthly}</strong></td>
+      <td>₪ ${totalMonthly}</td>
       <td>
         <label class="payment-toggle">
           <input type="checkbox" ${isChecked} onchange="togglePaymentStatus('${family._id}', this.checked)">
