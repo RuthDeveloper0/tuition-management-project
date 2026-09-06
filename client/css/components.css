@@ -51,7 +51,7 @@
 }
 
 .btn-add-child { background-color: #f1f5f9; color: var(--primary-color); border-color: #cbd5e1; }
-.btn-file { background-color: #eff6ff; color: var(--accent-color); border-color: #bfdbfe; }
+.btn-file { background-color: #eaf2fd; color: #0f172a; border-color: #bfdbfe; }
 .btn-edit { background-color: #fff; color: var(--text-main); border-color: var(--border-color); }
 .btn-delete { background-color: #fff; color: var(--danger-color); border-color: #fca5a5; }
 .btn-delete:hover { background-color: var(--danger-bg); }
