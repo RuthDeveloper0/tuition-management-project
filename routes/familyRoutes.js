@@ -8,11 +8,24 @@ import Family from '../models/Family.js';
 import User from '../models/User.js';
 
 const router = express.Router();
-const upload = multer({ dest: 'uploads/' });
 const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// הגדרת אחסון מותאם ל-Multer השומר על הסיומת המקורית של הקובץ
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname); // שמיעת הסיומת (.pdf, .jpg וכו')
+    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+  }
+});
+
+const upload = multer({ storage: storage });
 
 // Middleware לאימות טוקן
 export function authenticateToken(req, res, next) {
@@ -118,7 +131,30 @@ const handleUpdateYear = async (req, res) => {
 router.post('/update-year', handleUpdateYear);
 router.post('/advance-year', handleUpdateYear);
 
-// 2. הרשמת משתמש (תומך במייל)
+// נתיב להורדת קבצים מסודרת
+router.get('/download', async (req, res) => {
+  try {
+    const { filePath } = req.query;
+    if (!filePath) {
+      return res.status(400).json({ message: 'לא צוין נתיב קובץ' });
+    }
+
+    const cleanPath = filePath.startsWith('/') ? filePath.slice(1) : filePath;
+    const absolutePath = path.resolve(cleanPath);
+
+    return res.download(absolutePath, (err) => {
+      if (err && !res.headersSent) {
+        return res.status(404).json({ message: 'הקובץ לא נמצא בשרת' });
+      }
+    });
+  } catch (error) {
+    if (!res.headersSent) {
+      return res.status(500).json({ message: error.message });
+    }
+  }
+});
+
+// 2. הרשמת משתמש
 router.post('/register', async (req, res) => {
   try {
     const { email, username, password } = req.body;
@@ -149,7 +185,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// 3. התחברות משתמש ושליפת נתוני המשפחה
+// 3. התחברות משתמש
 router.post('/login', async (req, res) => {
   try {
     const { email, username, password } = req.body;
@@ -190,7 +226,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// 4. שליפת נתוני המשפחה עבור האזור האישי (לפי Query string או Token)
+// 4. שליפת נתוני המשפחה עבור האזור האישי
 router.get('/portaldata', async (req, res) => {
   try {
     const { email } = req.query;
