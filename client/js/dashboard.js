@@ -57,9 +57,9 @@ function renderFamilies() {
       ? family.children.reduce((sum, child) => sum + (child.price || 0), 0)
       : 0;
 
-    const tr = document.createElement('tr');
+   const tr = document.createElement('tr');
     if (needsAttention) {
-      tr.className = 'family-needs-attention';
+      tr.style.backgroundColor = '#f6f6f0'; // כאן אפשר לשנות את קוד הצבע לכל צבע שתנסי (למשל צהבהב, אפור בהיר וכו')
     }
 
     const arrowHtml = (hasChildren || hasFiles)
@@ -68,11 +68,11 @@ function renderFamilies() {
 
     let attentionBadge = '';
     if (hasGraduates && paymentUnpaid) {
-      attentionBadge = '<span style="color:var(--danger-color); font-size:12px; margin-right:4px;">(לטיפול: בוגר + לא שולם)</span>';
+      attentionBadge = '<span style="color: var(--danger-color); font-size: 12px; margin-right: 6px; font-weight: 600;">(לטיפול: בוגר + לא שולם)</span>';
     } else if (hasGraduates) {
-      attentionBadge = '<span style="color:var(--danger-color); font-size:12px; margin-right:4px;">(לטיפול: בוגר)</span>';
+      attentionBadge = '<span style="color: var(--danger-color); font-size: 12px; margin-right: 6px; font-weight: 600;">(לטיפול: בוגר)</span>';
     } else if (paymentUnpaid) {
-      attentionBadge = '<span style="color:var(--warning-color); font-size:12px; margin-right:4px;">(לטיפול: לא ירד תשלום)</span>';
+      attentionBadge = '<span style="color: #b45309; font-size: 12px; margin-right: 6px; font-weight: 600;">(לטיפול: לא ירד תשלום)</span>';
     }
 
     const filesCount = (family.files && family.files.length) ? family.files.length : 0;
@@ -84,7 +84,12 @@ function renderFamilies() {
       : '<span style="color:var(--danger-color); font-weight:600;">לא</span>';
 
     tr.innerHTML = `
-      <td>${arrowHtml}${family.familyName} ${attentionBadge} ${filesLabel}</td>
+      <td>
+        <div style="display: flex; align-items: center; gap: 4px;">
+          ${arrowHtml}${family.familyName} ${filesLabel}
+        </div>
+        ${attentionBadge ? `<div style="margin-top: 4px;">${attentionBadge}</div>` : ''}
+      </td>
       <td>${family.fatherName || ''} ${family.motherName ? 'ו' + family.motherName : ''}</td>
       <td>${family.email || '-'}</td>
       <td>${family.fatherPhone || '-'}</td>
@@ -125,7 +130,7 @@ function renderFamilies() {
           expandedHtml += `
             <li>
               <div class="child-info">
-                <strong>${child.name}</strong> — <span style="${statusStyle}">כיתה: ${child.grade}</span> (${child.price} ₪)
+                <strong>${child.name}</strong> — <span style="${statusStyle}">כיתה: ${child.grade}</span> (${child.price})
               </div>
               <div>
                 <button class="btn-sm btn-edit" onclick="openEditChildModal('${family._id}', '${child._id}', '${safeName}', '${safeGrade}', ${child.price})">ערוך ילד</button>

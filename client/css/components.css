@@ -47,7 +47,7 @@
   border-radius: 4px;
   cursor: pointer;
   border: 1px solid transparent;
-  margin-left: 4px;
+  margin: 2px 4px; 
 }
 
 .btn-add-child { background-color: #f1f5f9; color: var(--primary-color); border-color: #cbd5e1; }

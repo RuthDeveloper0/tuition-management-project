@@ -16,6 +16,7 @@ body {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
   border: 1px solid var(--border-color);
+  margin-bottom: 100px;
 }
 
 
