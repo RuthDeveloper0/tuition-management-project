@@ -9,7 +9,7 @@
 </head>
 <body>
 
-  <!-- אזור הכותרת והלוגו (במרכז, נקי ללא כפתורים) -->
+  <!-- אזור הכותרת והלוגו -->
   <div class="header-outer-wrapper">
     <header class="main-header">
       <div class="header-title-group">
@@ -29,7 +29,6 @@
           הצג רק משפחות לטיפול
         </label>
       </div>
-      <!-- שני הכפתורים יושבים עכשיו יחד באותו שורה -->
       <div class="header-buttons-group">
         <button class="btn" id="updateYearBtn" onclick="updateYear()">עדכון שנה</button>
         <button class="btn" onclick="openAddFamilyModal()">הוסף משפחה חדשה</button>
@@ -42,6 +41,7 @@
           <tr>
             <th>שם משפחה</th>
             <th>שמות ההורים</th>
+            <th>אימייל</th>
             <th>טלפון אבא</th>
             <th>טלפון אמא</th>
             <th>תשלום חודשי</th>
@@ -93,6 +93,10 @@
         <input type="text" id="familyNameInput">
       </div>
       <div class="form-group">
+        <label>אימייל:</label>
+        <input type="email" id="emailInput" placeholder="example@email.com">
+      </div>
+      <div class="form-group">
         <label>שם האב:</label>
         <input type="text" id="fatherNameInput">
       </div>
@@ -128,7 +132,7 @@
         <label>שם הילד/ה:</label>
         <input type="text" id="childNameInput">
       </div>
-<div class="form-group">
+      <div class="form-group">
         <label>שכבת גיל / כיתה:</label>
         <select id="childGradeSelect" onchange="handleGradeChange()">
           <option value="מעון פעוטות">מעון פעוטות</option>

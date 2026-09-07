@@ -1,140 +1,144 @@
 import jwt from 'jsonwebtoken';
 import Family from '../models/Family.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key';//יצירת טוקני אימות
+const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key';
 
-
-
-// פונקציית עזר לבדיקת הרשאות (לוודא שהורה עורך אך ורק את המשפחה שלו, אלא אם הוא מנהל)
+// פונקציית עזר לבדיקת הרשאות
 const isAuthorized = (req, familyId) => {
   return req.user && (req.user.role === 'admin' || req.user.familyId === familyId.toString());
 };
 
-
-// הרשמת הורה לפי קוד ייחודי (כולל שם משתמש, מייל וסיסמה)
+// הרשמת הורה - אימות שהמייל קיים בבסיס הנתונים ועדכון סיסמה
 export const registerParent = async (req, res) => {
-  try{
-    const { username, email, password, uniqueCode } = req.body;
-    if (!username || !email || !password || !uniqueCode) {
-      return res.status(400).json({ message: 'יש למלא את כל השדות: שם משתמש, מייל, סיסמה וקוד ייחודי' });
-  }
-  const cleanCode = uniqueCode.trim().replase().replace('#', '').toLowerCase();
-  
-  // איתור המשפחה לפי ID מלא, קוד מקוצר או familyCode
-  const allFamilies = await Family.find({});//שולף את כל רשימת המשפחות הקיימות במסד הנתונים ושומר אותם  במשתנה
-   const family = allFamilies.find(f => {
-    const idStr = f._id.toString().toLowerCase();
-    const codeStr = (f.code || f.familyCode || '').toLowerCase();
-     return (
-        idStr === cleanCode ||
-        codeStr === cleanCode ||
-        idStr.endsWith(cleanCode));
-   });
-   if(!family){
-     return res.status(404).json({ message: 'הקוד הייחודי אינו תקין או שאינו קיים במערכת' });
-   }
-   
+  try {
+    const { email, password } = req.body;
 
-    // עדכון פרטי הגישה של ההורה (שם משתמש, מייל וסיסמה)
-    family.username = username.trim();
-    family.email = email.trim();
-    family.password = password.trim(); // המודל שלך יטפל בהצפנה במידת הצורך
-    
+    if (!email || !password) {
+      return res.status(400).json({ message: 'יש למלא אימייל וסיסמה' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+
+    // בדיקה האם המייל קיים מראש בטבלת המשפחות
+    const family = await Family.findOne({ email: cleanEmail });
+
+    if (!family) {
+      return res.status(404).json({ message: 'שגיאה: מייל לא רשום במערכת, אינך מורשה להירשם' });
+    }
+
+    // עדכון הסיסמה
+    family.password = password.trim();
     await family.save();
-   
-    res.status(201).json({ message: 'ההרשמה בוצעה בהצלחה' });
 
-}
-  catch(error){
-      res.status(500).json({ message: err.message });
+    return res.status(200).json({ success: true, message: 'ההרשמה בוצעה בהצלחה' });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
   }
 };
 
-
-// התחברות הורה
+// התחברות הורה לפי מייל וסיסמה
 export const loginParent = async (req, res) => {
-  try{
-    const {username , password} = req.body;//קבלת שם משתמש וסיסמה לאיתור משפחה
-     if (!username || !password) {
-      return res.status(400).json({ message: 'יש להזין שם משתמש וסיסמה' });
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: 'יש להזין אימייל וסיסמה' });
     }
 
-    const family = await Family.findOne({username: username.trim()})
+    const cleanEmail = email.trim().toLowerCase();
+    const family = await Family.findOne({ email: cleanEmail });
+
     if (!family) {
-      return res.status(401).json({ message: 'שם משתמש או סיסמה שגויים' });
+      return res.status(401).json({ message: 'שגיאה: מייל לא רשום במערכת' });
     }
-   
-    const isMatch = await family.comparePassword(password);
+
+    const isMatch = await family.comparePassword(password.trim());
     if (!isMatch) {
-      return res.status(401).json({ message: 'שם משתמש או סיסמה שגויים' });
+      return res.status(401).json({ message: 'פרטי התחברות שגויים' });
     }
-    
-    const token = jwt.sign ({familyId: family._id , role: 'client'},//שומרים בתוך הטוקן את מזהה המשפחה ואת תפקיד המשתמש
-      JWT_SECRET,//חתימה סודית שרק השרת מכיר
-      { expiresIn: '7d' }//קובע שהטוקן תקף למשך 7 ימים בלבד. לאחר שבוע, ההורה יצטרך להתחבר מחדש למערכת כדי לקבל טוקן חדש מטעמי אבטחה.
+
+    const token = jwt.sign(
+      { familyId: family._id, role: 'client' },
+      JWT_SECRET,
+      { expiresIn: '7d' }
     );
 
-     res.json({ token, familyId: family._id });
-  }
-  catch(error){
-      res.status(500).json({ message: err.message });
+    return res.json({ token, familyId: family._id, email: family.email });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
   }
 };
 
+// שליפת נתוני האזור האישי לפי אימייל (Query Parameter)
+export const getPortalData = async (req, res) => {
+  try {
+    const { email } = req.query;
 
-// שליפת פרטי המשפחה והילדים של ההורה המחובר בלבד
+    if (!email) {
+      return res.status(400).json({ message: 'חסר פרמטר אימייל' });
+    }
+
+    const family = await Family.findOne({ email: email.trim().toLowerCase() });
+
+    if (!family) {
+      return res.status(404).json({ message: 'שגיאה: מייל לא רשום במערכת' });
+    }
+
+    return res.status(200).json({ success: true, family });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+// שליפת פרטי המשפחה והילדים של ההורה המחובר (לפי Token)
 export const getMyFamily = async (req, res) => {
   try {
     const family = await Family.findById(req.user.familyId);
     if (!family) {
       return res.status(404).json({ message: 'משפחה לא נמצאה' });
     }
-    res.json(family);
+    return res.json(family);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    return res.status(500).json({ message: err.message });
   }
 };
 
+// עדכון פרטי משפחה
+export const updateFamily = async (req, res) => {
+  try {
+    const familyIdToUpdate = req.params.id;
 
-// עדכון פרטי משפחה (מוגן - רק המשפחה של ההורה או אדמין)
-export const updateFamily = async (req , res) =>{
-  try{
-     const familyIdToUpdate = req.params.id;//מזהה המשפחה שמגיע מתוך כתובת ה-URL
-    
-    //בודקים בעזרת פונקציית העזר האם למשתמש יש אישור לעדכן את המשפחה הזו (כלומר, האם הוא מנהל או שזו המשפחה שלו)
-     if (!isAuthorized(req, familyIdToUpdate)) {
+    if (!isAuthorized(req, familyIdToUpdate)) {
       return res.status(403).json({ message: 'אין לך הרשאה לערוך נתונים של משפחה אחרת' });
     }
 
-    const updatedFamily = await Family.findByIdAndUpdate (familyIdToUpdate , req.body , {new: true});
+    const updatedFamily = await Family.findByIdAndUpdate(familyIdToUpdate, req.body, { new: true });
     if (!updatedFamily) {
       return res.status(404).json({ message: 'משפחה לא נמצאה' });
     }
-  
-    req.json(updateFamily);
-  }
-  catch (err) {
-    res.status(500).json({ message: err.message });
+
+    return res.json(updatedFamily);
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
   }
 };
 
-
-// מחיקת משפחה 
+// מחיקת משפחה
 export const deleteFamily = async (req, res) => {
-  try{
-    const familyIdToDelet = req.params.id;
-     if (!isAuthorized(req, familyIdToDelet)) {
+  try {
+    const familyIdToDelete = req.params.id;
+
+    if (!isAuthorized(req, familyIdToDelete)) {
       return res.status(403).json({ message: 'אין לך הרשאה למחוק משפחה אחרת' });
     }
 
-    const deletedFamily = await
-      Family.findByIdAndDelete(familyIdToDelet);
-      if(!deleteFamily){
-        return res.status(404).json({ message: 'משפחה לא נמצאה' });
-      }
-      res.json({ message: 'המשפחה נמחקה בהצלחה' });
-  }
-  catch(error){
-     res.status(500).json({ message: err.message });
+    const deletedFamily = await Family.findByIdAndDelete(familyIdToDelete);
+    if (!deletedFamily) {
+      return res.status(404).json({ message: 'משפחה לא נמצאה' });
+    }
+
+    return res.json({ message: 'המשפחה נמחקה בהצלחה' });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
   }
 };
