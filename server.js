@@ -12,7 +12,10 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/tuition_management';
+
+// מחרוזת חיבור ישירה ללא SRV שעוקפת חסימות DNS
+const DEFAULT_MONGO_URI = 'mongodb://ruth_hadas:Ruth123456@cluster0-shard-00-00.hvfuobe.mongodb.net:27017,cluster0-shard-00-01.hvfuobe.mongodb.net:27017,cluster0-shard-00-02.hvfuobe.mongodb.net:27017/tuition_db?ssl=true&replicaSet=atlas-hvfuobe-shard-0&authSource=admin&retryWrites=true&w=majority';
+const MONGO_URI = process.env.MONGO_URI || DEFAULT_MONGO_URI;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,13 +24,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// הנגשת תיקיית ה-client הסטטית
+// הנגשת תיקיות סטטיות
 const clientPath = path.join(__dirname, 'client');
 app.use(express.static(clientPath));
-
-// הגדרת תיקיית uploads ותיקיית client כתיקיות סטטיות
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use(express.static(path.join(__dirname, 'client')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // API Routes
@@ -38,7 +37,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running smoothly' });
 });
 
-// החזרת index.html לכל ראוט רגיל
+// תמיכה ב-SPA
 app.get('*', (req, res) => {
   res.sendFile(path.join(clientPath, 'index.html'));
 });
@@ -49,13 +48,18 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'שגיאת שרת פנימית', error: err.message });
 });
 
-mongoose.connect(MONGO_URI)
+// התחברות ל-Atlas עם פרמטר בודד לעקיפת תעודות SSL
+mongoose.connect(MONGO_URI, {
+  dbName: 'tuition_db',
+  serverSelectionTimeoutMS: 5000,
+  tlsAllowInvalidCertificates: true
+})
   .then(() => {
-    console.log('Connected to MongoDB successfully.');
+    console.log('Connected to MongoDB Atlas successfully.');
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
     });
   })
   .catch((err) => {
-    console.error('Failed to connect to MongoDB:', err.message);
+    console.error('Failed to connect to MongoDB Atlas:', err.message);
   });
