@@ -14,6 +14,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Middleware לאימות טוקן
 export function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -27,6 +28,7 @@ export function authenticateToken(req, res, next) {
   });
 }
 
+// חישוב מחיר ברירת מחדל לפי כיתה
 function getDefaultPriceByGrade(gradeStr) {
   if (!gradeStr) return 250;
   const g = gradeStr.toString();
@@ -34,14 +36,14 @@ function getDefaultPriceByGrade(gradeStr) {
   if (g.includes('230')) return 230;
   if (g.includes('300')) return 300;
   if (g.includes('250')) return 250;
-  
+
   if (g.includes('מעון')) return 1200;
   if (g.includes('גן')) return 230;
-  if (g.includes('ו\'') || g.includes('ז\'') || g.includes('ח\'')) return 300;
+  if (g.includes("ו'") || g.includes("ז'") || g.includes("ח'")) return 300;
   return 250;
 }
 
-// 1. עדכון שנת לימודים
+// 1. קידום שנת לימודים
 const handleUpdateYear = async (req, res) => {
   try {
     const families = await Family.find({});
@@ -69,12 +71,10 @@ const handleUpdateYear = async (req, res) => {
           if (!child) continue;
           let current = child.grade || '';
 
-          // אם הילד הוא כבר בוגר/לטיפול (ולא מעון בוגרים) - לא נוגעים
           if ((current.includes('בוגר') && !current.includes('מעון')) || current.includes('לטיפול')) {
             continue;
           }
 
-          // איתור המיקום המדויק במערך
           let currentIndex = gradeOrder.findIndex(item => {
             if (current.includes('פעוטות') && item.includes('פעוטות')) return true;
             if (current.includes('ביניים') && item.includes('ביניים')) return true;
@@ -91,13 +91,11 @@ const handleUpdateYear = async (req, res) => {
           });
 
           if (currentIndex !== -1) {
-            // מעבר לדרגה הבאה (מעון בוגרים יעבור לגן גיל 3)
             if (currentIndex + 1 < gradeOrder.length) {
               const nextGrade = gradeOrder[currentIndex + 1];
               child.grade = nextGrade;
               child.price = getDefaultPriceByGrade(nextGrade);
             } else {
-              // כיתה ח' עוברת לבוגר / לטיפול
               child.grade = 'בוגר / לטיפול';
             }
           } else {
@@ -117,28 +115,28 @@ const handleUpdateYear = async (req, res) => {
   }
 };
 
-
 router.post('/update-year', handleUpdateYear);
 router.post('/advance-year', handleUpdateYear);
 
-// 2. הרשמת משתמש
+// 2. הרשמת משתמש (תומך במייל)
 router.post('/register', async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { email, username, password } = req.body;
+    const userEmail = email || username;
 
-    if (!username || !password) {
-      return res.status(400).json({ message: 'יש להזין שם משתמש וסיסמה' });
+    if (!userEmail || !password) {
+      return res.status(400).json({ message: 'יש להזין אימייל וסיסמה' });
     }
 
-    const cleanUsername = username.trim();
+    const cleanEmail = userEmail.trim().toLowerCase();
 
-    const existingUser = await User.findOne({ username: cleanUsername });
+    const existingUser = await User.findOne({ username: cleanEmail });
     if (existingUser) {
-      return res.status(400).json({ message: 'שם המשתמש כבר תפוס, נא לבחור שם אחר' });
+      return res.status(400).json({ message: 'כתובת האימייל כבר רשומה במערכת' });
     }
 
     const newUser = new User({
-      username: cleanUsername,
+      username: cleanEmail,
       password: password.trim(),
       role: 'client'
     });
@@ -151,24 +149,29 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// 3. התחברות משתמש
+// 3. התחברות משתמש ושליפת נתוני המשפחה
 router.post('/login', async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { email, username, password } = req.body;
+    const userEmail = email || username;
 
-    if (!username || !password) {
-      return res.status(400).json({ message: 'יש להזין שם משתמש וסיסמה' });
+    if (!userEmail || !password) {
+      return res.status(400).json({ message: 'יש להזין אימייל וסיסמה' });
     }
 
-    const user = await User.findOne({ username: username.trim() });
+    const cleanEmail = userEmail.trim().toLowerCase();
+
+    const user = await User.findOne({ username: cleanEmail });
     if (!user) {
-      return res.status(401).json({ message: 'שם משתמש או סיסמה שגויים' });
+      return res.status(401).json({ message: 'אימייל או סיסמה שגויים' });
     }
 
     const isMatch = await user.comparePassword(password.trim());
     if (!isMatch) {
-      return res.status(401).json({ message: 'שם משתמש או סיסמה שגויים' });
+      return res.status(401).json({ message: 'אימייל או סיסמה שגויים' });
     }
+
+    const familyData = await Family.findOne({ email: cleanEmail });
 
     const token = jwt.sign(
       { userId: user._id, username: user.username, role: user.role },
@@ -176,13 +179,53 @@ router.post('/login', async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    return res.json({ token, role: user.role, userId: user._id });
+    return res.json({ 
+      token, 
+      role: user.role, 
+      userId: user._id, 
+      family: familyData || null 
+    });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 });
 
-// 4. שליפת כל המשפחות
+// 4. שליפת נתוני המשפחה עבור האזור האישי (לפי Query string או Token)
+router.get('/portaldata', async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email) {
+      return res.status(400).json({ message: 'חסר פרמטר אימייל' });
+    }
+
+    const family = await Family.findOne({ email: email.trim().toLowerCase() });
+    if (!family) {
+      return res.status(404).json({ message: 'לא נמצאו נתוני משפחה עבור אימייל זה' });
+    }
+
+    return res.json({ success: true, family });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+});
+
+// שליפת פרטי משפחה של הורה מחובר לפי Token
+router.get('/my-family', authenticateToken, async (req, res) => {
+  try {
+    const userEmail = req.user.username.toLowerCase();
+    const family = await Family.findOne({ email: userEmail });
+
+    if (!family) {
+      return res.status(404).json({ message: 'לא נמצאו נתוני משפחה עבור אימייל זה' });
+    }
+
+    return res.json(family);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+});
+
+// 5. שליפת כל המשפחות
 router.get('/', async (req, res) => {
   try {
     const families = await Family.find({}).sort({ familyName: 1 });
@@ -192,10 +235,10 @@ router.get('/', async (req, res) => {
   }
 });
 
-// 5. הוספת משפחה חדשה
+// 6. הוספת משפחה חדשה
 router.post('/', upload.array('files'), async (req, res) => {
   try {
-    const { familyName, fatherName, motherName, fatherPhone, motherPhone, paymentStatus, notes, familyCode } = req.body;
+    const { familyName, fatherName, motherName, fatherPhone, motherPhone, email, paymentStatus, notes, familyCode } = req.body;
 
     if (!familyName || !familyName.trim()) {
       return res.status(400).json({ message: 'שם משפחה הוא שדה חובה' });
@@ -210,6 +253,7 @@ router.post('/', upload.array('files'), async (req, res) => {
       motherName: motherName ? motherName.trim() : '',
       fatherPhone: fatherPhone ? fatherPhone.trim() : '',
       motherPhone: motherPhone ? motherPhone.trim() : '',
+      email: email ? email.trim().toLowerCase() : '',
       familyCode: familyCode ? familyCode.trim() : '',
       paymentStatus: parsedPaymentStatus,
       notes: notes ? notes.trim() : '',
@@ -224,7 +268,7 @@ router.post('/', upload.array('files'), async (req, res) => {
   }
 });
 
-// 6. העלאת קבצים למשפחה
+// 7. העלאת קבצים למשפחה
 router.post('/:id/files', upload.array('files'), async (req, res) => {
   try {
     const family = await Family.findById(req.params.id);
@@ -241,7 +285,7 @@ router.post('/:id/files', upload.array('files'), async (req, res) => {
   }
 });
 
-// 7. מחיקת קובץ מצורף
+// 8. מחיקת קובץ מצורף
 router.delete('/:id/files', async (req, res) => {
   try {
     const { filePath } = req.body;
@@ -271,7 +315,7 @@ router.delete('/:id/files', async (req, res) => {
   }
 });
 
-// 8. עדכון סטטוס תשלום
+// 9. עדכון סטטוס תשלום
 router.patch('/:id/payment-status', async (req, res) => {
   try {
     const { paymentStatus } = req.body;
@@ -289,10 +333,10 @@ router.patch('/:id/payment-status', async (req, res) => {
   }
 });
 
-// 9. עדכון פרטי משפחה
+// 10. עדכון פרטי משפחה
 router.put('/:id', upload.array('files'), async (req, res) => {
   try {
-    const { familyName, fatherName, motherName, fatherPhone, motherPhone, paymentStatus, notes, familyCode } = req.body;
+    const { familyName, fatherName, motherName, fatherPhone, motherPhone, email, paymentStatus, notes, familyCode } = req.body;
     const family = await Family.findById(req.params.id);
     if (!family) return res.status(404).json({ message: 'המשפחה לא נמצאה' });
 
@@ -301,6 +345,7 @@ router.put('/:id', upload.array('files'), async (req, res) => {
     if (motherName !== undefined) family.motherName = motherName.trim();
     if (fatherPhone !== undefined) family.fatherPhone = fatherPhone.trim();
     if (motherPhone !== undefined) family.motherPhone = motherPhone.trim();
+    if (email !== undefined) family.email = email.trim().toLowerCase();
     if (familyCode !== undefined) family.familyCode = familyCode.trim();
     if (paymentStatus !== undefined) family.paymentStatus = paymentStatus === 'true' || paymentStatus === true;
     if (notes !== undefined) family.notes = notes.trim();
@@ -317,7 +362,7 @@ router.put('/:id', upload.array('files'), async (req, res) => {
   }
 });
 
-// 10. מחיקת משפחה
+// 11. מחיקת משפחה
 router.delete('/:id', async (req, res) => {
   try {
     await Family.findByIdAndDelete(req.params.id);
@@ -327,7 +372,7 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// 11. הוספת ילד
+// 12. הוספת ילד
 router.post('/:id/children', async (req, res) => {
   try {
     const { name, grade, customPrice, price } = req.body;
@@ -352,7 +397,7 @@ router.post('/:id/children', async (req, res) => {
   }
 });
 
-// 12. עדכון ילד
+// 13. עדכון ילד
 router.put('/:id/children/:childId', async (req, res) => {
   try {
     const { name, grade, customPrice, price } = req.body;
@@ -380,7 +425,7 @@ router.put('/:id/children/:childId', async (req, res) => {
   }
 });
 
-// 13. מחיקת ילד
+// 14. מחיקת ילד
 router.delete('/:id/children/:childId', async (req, res) => {
   try {
     const family = await Family.findById(req.params.id);

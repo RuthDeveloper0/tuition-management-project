@@ -86,6 +86,7 @@ function renderFamilies() {
     tr.innerHTML = `
       <td>${arrowHtml}<strong>${family.familyName}</strong> ${attentionBadge} ${filesLabel}</td>
       <td>${family.fatherName || ''} ${family.motherName ? 'ו' + family.motherName : ''}</td>
+      <td>${family.email || '-'}</td>
       <td>${family.fatherPhone || '-'}</td>
       <td>${family.motherPhone || '-'}</td>
       <td><strong>₪ ${totalMonthly}</strong></td>
@@ -111,7 +112,7 @@ function renderFamilies() {
       childTr.className = 'children-row';
       childTr.id = `children-row-${family._id}`;
       
-      let expandedHtml = `<td colspan="8"><div class="children-wrapper">`;
+      let expandedHtml = `<td colspan="9"><div class="children-wrapper">`;
       
       if (hasChildren) {
         expandedHtml += `<div class="children-title">ילדי המשפחה:</div><ul class="children-list">`;
@@ -196,6 +197,7 @@ function toggleChildren(familyId, arrowElem) {
 function openAddFamilyModal() {
   document.getElementById('editFamilyId').value = '';
   document.getElementById('familyNameInput').value = '';
+  document.getElementById('emailInput').value = '';
   document.getElementById('fatherNameInput').value = '';
   document.getElementById('motherNameInput').value = '';
   document.getElementById('fatherPhoneInput').value = '';
@@ -211,6 +213,7 @@ function openEditFamilyModal(familyId) {
 
   document.getElementById('editFamilyId').value = familyId;
   document.getElementById('familyNameInput').value = family.familyName || '';
+  document.getElementById('emailInput').value = family.email || '';
   document.getElementById('fatherNameInput').value = family.fatherName || '';
   document.getElementById('motherNameInput').value = family.motherName || '';
   document.getElementById('fatherPhoneInput').value = family.fatherPhone || '';
@@ -224,6 +227,7 @@ async function submitFamily() {
   const familyId = document.getElementById('editFamilyId').value;
   const bodyData = {
     familyName: document.getElementById('familyNameInput').value,
+    email: document.getElementById('emailInput').value,
     fatherName: document.getElementById('fatherNameInput').value,
     motherName: document.getElementById('motherNameInput').value,
     fatherPhone: document.getElementById('fatherPhoneInput').value,

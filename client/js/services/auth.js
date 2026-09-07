@@ -20,8 +20,13 @@ document.addEventListener('DOMContentLoaded', () => {
   if (adminLoginForm) {
     adminLoginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const username = document.getElementById('adminUsername').value.trim();
-      const password = document.getElementById('adminPassword').value.trim();
+      const usernameInput = document.getElementById('adminUsername');
+      const passwordInput = document.getElementById('adminPassword');
+
+      if (!usernameInput || !passwordInput) return;
+
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value.trim();
 
       try {
         const response = await fetch('/api/auth/login', {
@@ -45,27 +50,32 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // הרשמת הורה - שולח אך ורק username ו-password
+  // הרשמת הורה
   if (parentRegisterForm) {
     parentRegisterForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const username = document.getElementById('parentRegUsername').value.trim();
-      const password = document.getElementById('parentRegPassword').value.trim();
+      const emailInput = document.getElementById('parentRegEmail');
+      const passwordInput = document.getElementById('parentRegPassword');
+
+      if (!emailInput || !passwordInput) return;
+
+      const email = emailInput.value.trim();
+      const password = passwordInput.value.trim();
 
       try {
         const response = await fetch('/api/families/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
+          body: JSON.stringify({ email, password })
         });
 
         const data = await response.json();
 
         if (response.ok) {
-          alert('ההרשמה בוצעה בהצלחה! כעת ניתן להתחבר.');
-          toggleParentForm('login');
+          alert('ההרשמה בוצעה בהצלחה!');
+          window.location.href = `/parent-portal.html?email=${encodeURIComponent(email)}`;
         } else {
-          alert('שגיאה: ' + data.message);
+          alert('שגיאה: ' + (data.message || 'מייל לא רשום במערכת'));
         }
       } catch (err) {
         alert('שגיאת תקשורת מול השרת');
@@ -77,24 +87,31 @@ document.addEventListener('DOMContentLoaded', () => {
   if (parentLoginForm) {
     parentLoginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const username = document.getElementById('parentLoginUsername').value.trim();
-      const password = document.getElementById('parentLoginPassword').value.trim();
+      const emailInput = document.getElementById('parentLoginEmail');
+      const passwordInput = document.getElementById('parentLoginPassword');
+
+      if (!emailInput || !passwordInput) return;
+
+      const email = emailInput.value.trim();
+      const password = passwordInput.value.trim();
 
       try {
         const response = await fetch('/api/families/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
+          body: JSON.stringify({ email, password })
         });
 
         const data = await response.json();
 
         if (response.ok) {
-          localStorage.setItem('parentToken', data.token);
+          if (data.token) {
+            localStorage.setItem('parentToken', data.token);
+          }
           localStorage.setItem('role', data.role || 'client');
-          window.location.href = '/parent-portal.html';
+          window.location.href = `/parent-portal.html?email=${encodeURIComponent(email)}`;
         } else {
-          alert('שגיאה: ' + data.message);
+          alert('שגיאה: ' + (data.message || 'מייל לא רשום במערכת'));
         }
       } catch (err) {
         alert('שגיאת תקשורת מול השרת');

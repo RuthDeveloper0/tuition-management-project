@@ -37,25 +37,25 @@
         <h2>כניסת הורה</h2>
         <form id="parentLoginForm">
           <div class="form-group">
-            <label>שם משתמש:</label>
-            <input type="text" id="parentLoginUsername" placeholder="הזן שם משתמש" required />
+            <label>כתובת אימייל:</label>
+            <input type="email" id="parentLoginEmail" placeholder="הזן אימייל" required />
           </div>
           <div class="form-group">
             <label>סיסמה:</label>
             <input type="password" id="parentLoginPassword" placeholder="הזן סיסמה" required />
           </div>
-          <button type="submit" class="btn" style="width: 100%; margin-top: 8px;">התחבר כהורה</button>
+          <button type="submit" class="btn" style="width: 100%; margin-top: 8px;">התחבר למערכת</button>
         </form>
         <div class="toggle-link" onclick="toggleParentForm('register')">טרם נרשמת? לחץ כאן להרשמה ראשונית</div>
       </div>
 
-      <!-- טופס הרשמת הורה (ללא שדה שם משפחה במערכת) -->
+      <!-- טופס הרשמת הורה -->
       <div id="parentRegisterView" class="hidden">
         <h2>הרשמת הורה</h2>
         <form id="parentRegisterForm">
           <div class="form-group">
-            <label>בחר שם משתמש:</label>
-            <input type="text" id="parentRegUsername" placeholder="שם משתמש לבחירתך" required />
+            <label>כתובת אימייל:</label>
+            <input type="email" id="parentRegEmail" placeholder="your@email.com" required />
           </div>
           <div class="form-group">
             <label>בחר סיסמה:</label>
