@@ -14,8 +14,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // מחרוזת חיבור ישירה ללא SRV שעוקפת חסימות DNS
-const DEFAULT_MONGO_URI = 'mongodb://ruth_hadas:Ruth123456@cluster0-shard-00-00.hvfuobe.mongodb.net:27017,cluster0-shard-00-01.hvfuobe.mongodb.net:27017,cluster0-shard-00-02.hvfuobe.mongodb.net:27017/tuition_db?ssl=true&replicaSet=atlas-hvfuobe-shard-0&authSource=admin&retryWrites=true&w=majority';
-const MONGO_URI = process.env.MONGO_URI || DEFAULT_MONGO_URI;
+const MONGO_URI = process.env.MONGO_URI;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -50,7 +49,6 @@ app.use((err, req, res, next) => {
 
 // התחברות ל-Atlas עם פרמטר בודד לעקיפת תעודות SSL
 mongoose.connect(MONGO_URI, {
-  dbName: 'tuition_db',
   serverSelectionTimeoutMS: 5000,
   tlsAllowInvalidCertificates: true
 })
