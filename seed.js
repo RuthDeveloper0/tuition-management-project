@@ -6,7 +6,7 @@ import Child from './models/Child.js';
 
 dotenv.config();
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/tuition_management';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://tuition_managments:HR123456789@cluster0.z0faowj.mongodb.net/?appName=Cluster0';
 
 const seedData = async () => {
   try {
