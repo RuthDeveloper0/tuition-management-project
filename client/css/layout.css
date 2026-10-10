@@ -79,6 +79,7 @@ header h1, h2, h3 {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   overflow: hidden;
+  
 }
 
 table {
@@ -177,13 +178,16 @@ tr.family-needs-attention {
       color: #0f172a;
       margin-bottom: 32px;
        }
-    .cards-container {
+
+       
+ /* פריסת ברירת מחדל למחשב: כרטיסיות זו לצד זו במרכז */
+.cards-container {
   display: flex !important;
   flex-direction: row !important;
   justify-content: center;
   align-items: flex-start;
   gap: 30px;
-  flex-wrap: nowrap; /* מונע מהם לרדת שורה בכוח */
+  flex-wrap: nowrap;
   width: 100%;
   max-width: 900px;
   margin: 0 auto 40px auto;
@@ -195,10 +199,21 @@ tr.family-needs-attention {
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   width: 400px;
-  flex-shrink: 0; /* מונע מהכרטיסים להתכווץ או להידחס */
-  
+  flex-shrink: 0;
 }
 
+/* התאמה לטלפונים ניידים בלבד (מתחת ל-768 פיקסלים) */
+@media (max-width: 768px) {
+  .cards-container {
+    flex-direction: column !important;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .login-card {
+    width: 100%;
+    max-width: 400px;
+  }
+}
     .login-card h2 {
       margin-top: 0;
       color: var(--primary-color);
@@ -283,3 +298,5 @@ tr.family-needs-attention {
   font-size: 45px;
   font-weight: bold;
 }
+
+
