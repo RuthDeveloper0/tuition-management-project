@@ -116,7 +116,7 @@ body {
 
 /* עיצוב הפוטר שייצמד לתחתית ברוחב מלא */
 .site-footer {
-  width: 100%;
+  width: 100% !important;
   background-color: #0f172a !important; 
   padding: 30px 20px;
   color: #f1f5f9;
@@ -125,10 +125,11 @@ body {
 }
 
 .footer-inner-wrapper {
+  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
+  box-sizing: border-box;
 }
-
 .footer-container {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
