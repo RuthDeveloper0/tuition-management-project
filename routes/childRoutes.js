@@ -1,4 +1,6 @@
 import express from 'express';//ספריית הבסיס ליצירת נתבי השרת
+
+//יבוא פונקציות של  יצירת ילד עדכון ילד ומחיקת ילד
 import { createChild, updateChild, deleteChild } from '../controllers/childController.js';
 import { verifyAdmin } from '../middleware/auth.js';//רכיב  שמוודא שרק מנהלים מורשים יכולים לבצע את הפעולות האלו
 

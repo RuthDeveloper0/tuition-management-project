@@ -1,19 +1,19 @@
 import mongoose from 'mongoose';
 
 const childSchema = new mongoose.Schema({
-  firstName:{
+  firstName:{//שם פרטי
     type: String,
     required: [true , 'שם פרטי הינו שדה חובה'],
     trim: true// מנקה רווחים
   },
 
-  familyId:{
+  familyId:{//מזהה משפחה
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Family',//מקשר את הילד למשפחה שאליה הוא שייך.
+    ref: 'Family',//מקשר את הילד למשפחה שאליה הוא שייך
     required: true// שדה חובה
   },
 
-  ageGroup:{
+  ageGroup:{//כיתה 
     type: String,
     enum: [
   'מעון בוגרים', 'מעון ביניים', 'מעון פעוטות',
@@ -24,7 +24,7 @@ const childSchema = new mongoose.Schema({
     required: true
   },
 
-  birthYear:{
+  birthYear:{//שנת לידה
     type: Number,
     required: true
   },
@@ -34,7 +34,7 @@ const childSchema = new mongoose.Schema({
     default: null// אם אין מחיר ברירת מחדל ריק
   },
 
-  markedForAction:{
+  markedForAction:{//האם צריך פעולה
     type: Boolean,
     default: false
   }
@@ -42,4 +42,6 @@ const childSchema = new mongoose.Schema({
   timestamps: true//מוסיף אוטומטית שני שדות למסמך: מתי הרשומה נוצרה  ומתי היא עודכנה לאחרונה 
 });
 
+
+// CHILD  יוצר את המודל בפועל מתוך הסכמה שהוגדרה תחת השם 
 export default mongoose.model('Child' , childSchema);

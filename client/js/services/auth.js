@@ -12,9 +12,9 @@ function toggleParentForm(view) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  const adminLoginForm = document.getElementById('adminLoginForm');
-  const parentLoginForm = document.getElementById('parentLoginForm');
-  const parentRegisterForm = document.getElementById('parentRegisterForm');
+  const adminLoginForm = document.getElementById('adminLoginForm');//התחברות מנהל
+  const parentLoginForm = document.getElementById('parentLoginForm');//התחברות הורה
+  const parentRegisterForm = document.getElementById('parentRegisterForm');//הרשמת הורה
 
   // התחברות מנהל
   if (adminLoginForm) {

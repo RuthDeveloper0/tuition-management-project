@@ -1,7 +1,9 @@
+//מייבא את מודל הנתונים של מונגוס  המגדיר את הסכמה  של נתוני הילדים במסד הנתונים 
 import Child from '../models/Child.js';
 
 
 //פונקציה ליצירת ילד חדש
+//פונ אסינכרונית שנמתין לביצוע דברים
 export const createChild = async (req , res) =>{
   try{
     const child = new Child(req.body);//יצירת ילד חדש מהנתונים שהגיעו
@@ -15,11 +17,14 @@ export const createChild = async (req , res) =>{
 
 
 // פונקציה לעדכון פרטי ילד
+//פונ אסינכרונית שנמתין לביצוע דברים
 export const updateChild = async (req, res) => {
   try{
     //{ new: true }-כדי לקבל את הנתונים המעודכנים בחזרה
+    //req.params.id מזהה יחודי של הילד שנשלח
+    //req.body נתונים חדשים שצריך לעדכן ברשימה
     const child = await Child.findByIdAndUpdate(req.params.id , req.body , { new: true });
-    res.json(child);
+    res.json(child);//שולח ללקוח את הילד המעודכן כגסון
   }
   catch (error){
     res.status(400).json({message:'שגיאה בעדכון פרטי ילד', error: error.message });
@@ -30,8 +35,9 @@ export const updateChild = async (req, res) => {
 //פונקציה למחיקת ילד
 export const deleteChild = async (req, res) => {
   try{
+    // כדי לדעת איזו רשומה למחוק URL   מזהה הילד שנשלח בכתובת ה 
     await Child.findByIdAndDelete(req.params.id);
-    req.json({message:'הילד נמחק בהצלחה'})
+    res.json({message:'הילד נמחק בהצלחה'})
   }
   catch(error){
         res.status(500).json({ message: 'שגיאה במחיקת ילד', error: error.message });
