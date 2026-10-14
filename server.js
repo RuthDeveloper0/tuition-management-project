@@ -39,16 +39,18 @@ app.use(express.json());
 // הפעלת מתווך המאפשר פענוח נתונים מטפסים (URL-encoded)
 app.use(express.urlencoded({ extended: true }));
 
-// הגדרת הנתיב לתיקיית צד הלקוח (Client) לצורך הנגשת קבצים סטטיים
+// הגדרת הנתיב לתיקיית צד הלקוח לצורך הנגשת קבצים סטטיים
 const clientPath = path.join(__dirname, 'client');
 // הגדרת תיקיית הלקוח כתיקייה הנגשת לציבור בשרת
 app.use(express.static(clientPath));
-// הגדרת תיקיית ההעלאות (uploads) כתיקייה ציבורית להצגת קבצים שהועלו
+// הגדרת תיקיית ההעלאות כתיקייה ציבורית להצגת קבצים שהועלו
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// הגדרת ניתוב עבור כל בקשות ה-API של אימות תחת הקידומת /api/auth
+// הגדרת ניתוב עבור כל בקשות ה-API
+//  של אימות תחת הקידומת /api/auth
 app.use('/api/auth', authRoutes);
-// הגדרת ניתוב עבור כל בקשות ה-API הקשורות למשפחות תחת הקידומת /api/families
+// הגדרת ניתוב עבור כל בקשות ה-API 
+// הקשורות למשפחות תחת הקידומת /api/families
 app.use('/api/families', familyRoutes);
 
 // הגדרת נתיב בדיקה (Health Check) לווידוא שהשרת פועל תקין
@@ -61,7 +63,7 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(clientPath, 'index.html'));
 });
 
-// מתווך (Middleware) גלובלי לטיפול בשגיאות שמתרחשים בשרת
+// מתווך גלובלי לטיפול בשגיאות שמתרחשים בשרת
 app.use((err, req, res, next) => {
   console.error('Unhandled Error:', err.stack);
   res.status(500).json({ message: 'שגיאת שרת פנימית', error: err.message });
@@ -69,7 +71,7 @@ app.use((err, req, res, next) => {
 
 // התחברות למסד הנתונים MongoDB Atlas עם הגדרת פסק זמן ותמיכה בעקיפת בעיות אימות SSL
 mongoose.connect(MONGO_URI, {
-  serverSelectionTimeoutMS: 5000,
+  serverSelectionTimeoutMS: 5000,//ירוץ לאחר 5 שניות
   tlsAllowInvalidCertificates: true
 })
   .then(() => {
