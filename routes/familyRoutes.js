@@ -70,7 +70,7 @@ const handleUpdateYear = async (req, res) => {
 
     const gradeOrder = [
       'מעון פעוטות (1200 ₪)',
-      'מעון ביניים (1200 ₪)',
+      'מעון תינוקות (1200 ₪)',
       'מעון בוגרים (1200 ₪)',
       'גן גיל 3 (230 ₪)',
       'גן גיל 4 (230 ₪)',
@@ -102,7 +102,7 @@ const handleUpdateYear = async (req, res) => {
 
           let currentIndex = gradeOrder.findIndex(item => {
             if (current.includes('פעוטות') && item.includes('פעוטות')) return true;
-            if (current.includes('ביניים') && item.includes('ביניים')) return true;
+            if (current.includes('תינוקות') && item.includes('תינוקות')) return true;
             if (current.includes('מעון בוגרים') && item.includes('מעון בוגרים')) return true;
             if (current.includes('גיל 3') && item.includes('גיל 3')) return true;
             if (current.includes('גיל 4') && item.includes('גיל 4')) return true;
