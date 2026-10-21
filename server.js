@@ -15,6 +15,7 @@ import { fileURLToPath } from 'url';
 import authRoutes from './routes/authRoutes.js';
 // ייבוא נתיבי ה-API הקשורים לניהול המשפחות במערכת
 import familyRoutes from './routes/familyRoutes.js';
+import errorHandler from './middleware/errorHandler.js';
 
 // טעינת משתני הסביבה מתוך קובץ ה-.env אל תוך process.env
 dotenv.config();
@@ -63,11 +64,8 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(clientPath, 'index.html'));
 });
 
-// מתווך גלובלי לטיפול בשגיאות שמתרחשים בשרת
-app.use((err, req, res, next) => {
-  console.error('Unhandled Error:', err.stack);
-  res.status(500).json({ message: 'שגיאת שרת פנימית', error: err.message });
-});
+// מתווך מרכזי לטיפול בשגיאות מכל נתיבי השרת
+app.use(errorHandler);
 
 // התחברות למסד הנתונים MongoDB Atlas עם הגדרת פסק זמן ותמיכה בעקיפת בעיות אימות SSL
 mongoose.connect(MONGO_URI, {

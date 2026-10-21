@@ -6,17 +6,23 @@ import path from 'path';//ייבוא ספריית נתיבים לניהול נת
 import { fileURLToPath } from 'url';//פונקציית עזר המאפשרת לחלץ את נתיב הקובץ הנוכחי
 import Family from '../models/Family.js';
 import User from '../models/User.js';
+import { requestSchemas, validateRequest } from '../middleware/validateRequest.js';
+import AppError from '../middleware/AppError.js';
+import asyncHandler from '../middleware/asyncHandler.js';
 
 const router = express.Router();//יוצר אובייקט נתב חדש
 const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key';//מגדיר את מפתח הסודיות
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const uploadsDirectory = path.join(__dirname, '..', 'uploads');
 
 // השומר על הסיומת המקורית של הקובץ MULTER הגדרת אחסון מותאם ל
 const storage = multer.diskStorage({//מגדיר באיזו תיקייה ישמרו קבצים המועלים לשרת בדיסק הקשיח
   destination: function (req, file, cb) {//פונקציית היעד המגדירה היכן לשמור את הקבצים שהועלו
-    cb(null, 'uploads/');
+    fs.mkdir(uploadsDirectory, { recursive: true })
+      .then(() => cb(null, uploadsDirectory))
+      .catch(cb);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
@@ -35,11 +41,11 @@ export function authenticateToken(req, res, next) {
   const token = authHeader && authHeader.split(' ')[1];
 
   //בדיקת הגנה – אם לא נמצא אסימון עוצר מיד
-  if (!token) return res.status(401).json({ message: 'חסר אסימון אימות' });
+  if (!token) return next(new AppError(401, 'חסר אסימון אימות'));
 
   //מאמת את תקיפות האסימון באמצעות המפתח הסודי
   jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ message: 'אסימון לא תקין' });
+    if (err) return next(err);
     //אם האימות הצליח
     //מחזירה את הנתונים שהוצפנו בתוך האסימון
     req.user = user;
@@ -63,8 +69,7 @@ function getDefaultPriceByGrade(gradeStr) {
 }
 
 // 1. קידום שנת לימודים
-const handleUpdateYear = async (req, res) => {
-  try {
+const handleUpdateYear = asyncHandler(async (req, res) => {
     //שולף את כל מסמכי המשפחות הקיימות במסד הנתונים
     const families = await Family.find({});
 
@@ -137,11 +142,7 @@ const handleUpdateYear = async (req, res) => {
     }
 
     return res.status(200).json({ message: 'שנת הלימודים עודכנה בהצלחה לכל המשפחות' });
-  } catch (error) {
-    console.error('Error updating school year:', error);
-    return res.status(500).json({ message: 'שגיאה בעדכון שנת הלימודים: ' + error.message });
-  }
-};
+});
 
 //2 השורות מבצעות אותו הדבר וזה לביטחון 
 //כשלוחצים על עדכון שנה  פה הוא שולח לפונקציה שמבצעת זאת
@@ -149,47 +150,30 @@ router.post('/update-year', handleUpdateYear);
 router.post('/advance-year', handleUpdateYear);
 
 // נתיב להורדת קבצים מסודרת
-router.get('/download', async (req, res) => {//מיועד לטיפול בבקשות להורדת קבצים מהשרת
-  try {
+router.get('/download', validateRequest(requestSchemas.downloadQuery, 'query'), asyncHandler(async (req, res, next) => {//מיועד לטיפול בבקשות להורדת קבצים מהשרת
     const { filePath } = req.query;//שולף נתיב קובץ
-    if (!filePath) {//אם אין נתיב קובץ
-      return res.status(400).json({ message: 'לא צוין נתיב קובץ' });
-    }
-
     //בודק אם הנתיב מתחיל בקו נטוי  אם כן מסיר אותו להבטחה
     const cleanPath = filePath.startsWith('/') ? filePath.slice(1) : filePath;
    //ממיר את הנתיב היחסי לנתיב מוחלט
     const absolutePath = path.resolve(cleanPath);
 
-    return res.download(absolutePath, (err) => {//פונ מובנית המבצעת את ההורדה
-      if (err && !res.headersSent) {//בודק אם יש שגיאה  והכותרות לא נשלחו ללקוח
-        return res.status(404).json({ message: 'הקובץ לא נמצא בשרת' });
-      }
+    return res.download(absolutePath, error => {//פונ מובנית המבצעת את ההורדה
+      if (error) next(error);
     });
-  } catch (error) {
-    if (!res.headersSent) {
-      return res.status(500).json({ message: error.message });
-    }
-  }
-});
+}));
 
 // 2. הרשמת משתמש
-router.post('/register', async (req, res) => {
-  try {
+router.post('/register', validateRequest(requestSchemas.familyRegister), asyncHandler(async (req, res) => {
     const { email, username, password } = req.body;
     //מאפשר גמישות בקליטת הנתונים ע"י שימוש באימייל או בשם המשתמש בהתאם למה שנשלח מהלקוח
     const userEmail = email || username;
-
-    if (!userEmail || !password) {
-      return res.status(400).json({ message: 'יש להזין אימייל וסיסמה' });
-    }
 
     const cleanEmail = userEmail.trim().toLowerCase();
 
     //מחפש במסד הנתונים משתמש קיים בעל אותו שם משתמש/אימייל
     const existingUser = await User.findOne({ username: cleanEmail });
     if (existingUser) {//אם נמצא
-      return res.status(400).json({ message: 'כתובת האימייל כבר רשומה במערכת' });
+      throw new AppError(409, 'כתובת האימייל כבר רשומה במערכת');
     }
 
     const newUser = new User({
@@ -201,33 +185,25 @@ router.post('/register', async (req, res) => {
     await newUser.save();//מחכה שישמר המשתמש החדש
 
     return res.status(201).json({ message: 'ההרשמה הושלמה בהצלחה' });
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
-});
+}));
 
 // 3. התחברות משתמש
-router.post('/login', async (req, res) => {
-  try {
+router.post('/login', validateRequest(requestSchemas.familyLogin), asyncHandler(async (req, res) => {
     const { email, username, password } = req.body;
         //מאפשר גמישות בקליטת הנתונים ע"י שימוש באימייל או בשם המשתמש בהתאם למה שנשלח מהלקוח
     const userEmail = email || username;
-
-    if (!userEmail || !password) {
-      return res.status(400).json({ message: 'יש להזין אימייל וסיסמה' });
-    }
 
     const cleanEmail = userEmail.trim().toLowerCase();
 
     //מחפש במסד הנתונים משתמש ששם המשתמש/אימייל שלו תואם לכתובת הנקייה
     const user = await User.findOne({ username: cleanEmail });
     if (!user) {//אם המשתמש לא נמצא או שהסיסמה שהוקלדה אינה תואמת לסיסמה המוצפנת במסד הנתונים
-      return res.status(401).json({ message: 'אימייל או סיסמה שגויים' });
+      throw new AppError(401, 'אימייל או סיסמה שגויים');
     }
 
     const isMatch = await user.comparePassword(password.trim());
     if (!isMatch) {
-      return res.status(401).json({ message: 'אימייל או סיסמה שגויים' });
+      throw new AppError(401, 'אימייל או סיסמה שגויים');
     }
 
     //מחפש במסד הנתונים את נתוני המשפחה המשוייכים לכתובת המייל הזו
@@ -246,68 +222,43 @@ router.post('/login', async (req, res) => {
       userId: user._id, //המזהה הייחודי של המשתמש במסד הנתונים
       family: familyData || null //נתוני המשפחה
     });
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
-});
+}));
 
 // 4. שליפת נתוני המשפחה עבור האזור האישי
-router.get('/portaldata', async (req, res) => {
-  try {
+router.get('/portaldata', validateRequest(requestSchemas.portalQuery, 'query'), asyncHandler(async (req, res) => {
     const { email } = req.query;
-    if (!email) {
-      return res.status(400).json({ message: 'חסר פרמטר אימייל' });
-    }
-
     const family = await Family.findOne({ email: email.trim().toLowerCase() });//מחפש משפחה עם המייל
     if (!family) {//לא נמצא
-      return res.status(404).json({ message: 'לא נמצאו נתוני משפחה עבור אימייל זה' });
+      throw new AppError(404, 'לא נמצאו נתוני משפחה עבור אימייל זה');
     }
 
     //אם נמצאו נתוני משפחה שולח שהצליח+ הנתונים של המשפחה
     return res.json({ success: true, family });
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
-});
+}));
 
 // שליפת פרטי משפחה של הורה מחובר לפי Token
-router.get('/my-family', authenticateToken, async (req, res) => {
-  try {
+router.get('/my-family', authenticateToken, asyncHandler(async (req, res) => {
     //שולף משתמש/מייל וממיר לאותיות קטנות
     const userEmail = req.user.username.toLowerCase();
     const family = await Family.findOne({ email: userEmail });//מחפש משפחה עם המייל
 
     if (!family) {//לא נמצאה 
-      return res.status(404).json({ message: 'לא נמצאו נתוני משפחה עבור אימייל זה' });
+      throw new AppError(404, 'לא נמצאו נתוני משפחה עבור אימייל זה');
     }
 
     return res.json(family);//אם המשפחה נמצאה הצלחה שולח הצלחה + פרטי משפחה
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
-});
+}));
 
 // 5. שליפת כל המשפחות
-router.get('/', async (req, res) => {
-  try {
+router.get('/', asyncHandler(async (req, res) => {
     //מוציא את כל השמות משפחה וממין בסדר עולה 
     const families = await Family.find({}).sort({ familyName: 1 });
     return res.json(families);//שולח חזרה אל דפדפן הלקוח את מערך המשפחות שנמצאו בפורמט גסון 
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
-});
+}));
 
 // 6. הוספת משפחה חדשה
-router.post('/', upload.array('files'), async (req, res) => {
-  try {
+router.post('/', upload.array('files'), validateRequest(requestSchemas.familyCreate), asyncHandler(async (req, res) => {
     const { familyName, fatherName, motherName, fatherPhone, motherPhone, email, paymentStatus, notes, familyCode } = req.body;
-
-    if (!familyName || !familyName.trim()) {//אם שם משפ ריק או מכיל רווחים
-      return res.status(400).json({ message: 'שם משפחה הוא שדה חובה' });
-    }
-
 
     //בודק האם צורפו קבצים בבקשה.עובר על כל קובץ וממיר נתיב השמירה לפורמט אחיד עם תווים נטויים תקינים ואם לא – מגדיר מערך ריק
     const filesPaths = req.files ? req.files.map(file => file.path.replace(/\\/g, '/')) : [];
@@ -331,17 +282,13 @@ router.post('/', upload.array('files'), async (req, res) => {
 
     const savedFamily = await newFamily.save();
     return res.status(201).json(savedFamily);
-  } catch (error) {
-    return res.status(400).json({ message: error.message });
-  }
-});
+}));
 
 // 7. העלאת קבצים למשפחה
-router.post('/:id/files', upload.array('files'), async (req, res) => {
-  try {
+router.post('/:id/files', validateRequest(requestSchemas.familyParams, 'params'), upload.array('files'), asyncHandler(async (req, res) => {
     //מחפש משפחה לפי מזהה יחודי שהתקבל
     const family = await Family.findById(req.params.id);
-    if (!family) return res.status(404).json({ message: 'המשפחה לא נמצאה' });
+    if (!family) throw new AppError(404, 'המשפחה לא נמצאה');
 
     if (req.files && req.files.length > 0) {//בודק אם יש קבצים והם לא ריקים
       //עובר על כל קובץ שהועלה וממיר את נתיב השמירה שלו לפורמט אחיד עם תווים נטויים תקינים
@@ -350,21 +297,15 @@ router.post('/:id/files', upload.array('files'), async (req, res) => {
       await family.save();//שומר שינויים
     }
     return res.json(family);//שולח חזרה אל דפדפן הלקוח את אובייקט המשפחה המעודכן לאחר הוספת הקבצים
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
-});
+}));
 
 // 8. מחיקת קובץ מצורף
-router.delete('/:id/files', async (req, res) => {
-  try {
+router.delete('/:id/files', validateRequest(requestSchemas.familyParams, 'params'), validateRequest(requestSchemas.fileDelete), asyncHandler(async (req, res) => {
     const { filePath } = req.body;//שולף את נתיב הקובץ
-    if (!filePath) return res.status(400).json({ message: 'לא צוין נתיב קובץ למחיקה' });
-
     //מחפש במסד הנתונים את רשומת המשפחה לפי המזהה הייחודי שלה
     const family = await Family.findById(req.params.id);
     //אם לא נמצאה המשפחה מחזיר שגיאה
-    if (!family) return res.status(404).json({ message: 'המשפחה לא נמצאה' });
+    if (!family) throw new AppError(404, 'המשפחה לא נמצאה');
 
     //מסיר קו נטוי מוביל אם קיים, כדי ליצור נתיב נקי
     const cleanPath = filePath.startsWith('/') ? filePath.slice(1) : filePath;
@@ -373,7 +314,7 @@ router.delete('/:id/files', async (req, res) => {
     try {
       await fs.unlink(absolutePath);//מוחק פיזית את הקובץ מהדיסק הקשיח של השרת
     } catch (error) {
-      console.log('הקובץ לא נמצא פיזית בדיסק:', error.message);
+      if (error.code !== 'ENOENT') throw error;
     }
 
     //מעדכן את מערך הקבצים של המשפחה ומסנן ממנו החוצה את הקובץ שנמחק
@@ -385,14 +326,10 @@ router.delete('/:id/files', async (req, res) => {
     await family.save();
     //מחזיר ללקוח את אובייקט המשפחה המעודכן לאחר הסרת הקובץ
     return res.json(family);
-  } catch (error) {
-    return res.status(500).json({ message: 'שגיאה במחיקת הקובץ: ' + error.message });
-  }
-});
+}));
 
 // 9. עדכון סטטוס תשלום
-router.patch('/:id/payment-status', async (req, res) => {
-  try {
+router.patch('/:id/payment-status', validateRequest(requestSchemas.familyParams, 'params'), validateRequest(requestSchemas.paymentStatus), asyncHandler(async (req, res) => {
     //שולף את משתנה סטטוס התשלום מתוך גוף הבקשה
     const { paymentStatus } = req.body;
     //מוודא שהסטטוס תשלום מומר בצורה מדויקת לסוג בוליאני אם הגיע כמחרוזת ואם הגיע כמשתנה בוליאני 
@@ -403,19 +340,15 @@ router.patch('/:id/payment-status', async (req, res) => {
       { new: true }
     );
 
-    if (!family) return res.status(404).json({ message: 'המשפחה לא נמצאה' });
+    if (!family) throw new AppError(404, 'המשפחה לא נמצאה');
     return res.json(family);//אם נמצאה משפחה מחזיר סטטוס הצליח + נתוני משפחה
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
-});
+}));
 
 // 10. עדכון פרטי משפחה
-router.put('/:id', upload.array('files'), async (req, res) => {
-  try {
+router.put('/:id', validateRequest(requestSchemas.familyParams, 'params'), upload.array('files'), validateRequest(requestSchemas.familyUpdate), asyncHandler(async (req, res) => {
     const { familyName, fatherName, motherName, fatherPhone, motherPhone, email, paymentStatus, notes, familyCode } = req.body;
     const family = await Family.findById(req.params.id);//מאתר במסד הנתונים את רשומת המשפחה הספציפית לפי המזהה שלה
-    if (!family) return res.status(404).json({ message: 'המשפחה לא נמצאה' });
+    if (!family) throw new AppError(404, 'המשפחה לא נמצאה');
 
     if (familyName) family.familyName = familyName.trim();
     if (fatherName !== undefined) family.fatherName = fatherName.trim();
@@ -434,31 +367,21 @@ router.put('/:id', upload.array('files'), async (req, res) => {
 
     await family.save();//שמור את המשפחה עם העדכונים
     return res.json(family);//אם הצליח מחזיר סטטוס הצלחה+נתוני משפחה
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
-});
+}));
 
 // 11. מחיקת משפחה
-router.delete('/:id', async (req, res) => {
-  try {
-    await Family.findByIdAndDelete(req.params.id);
+router.delete('/:id', validateRequest(requestSchemas.familyParams, 'params'), asyncHandler(async (req, res) => {
+    const family = await Family.findByIdAndDelete(req.params.id);
+    if (!family) throw new AppError(404, 'המשפחה לא נמצאה');
     return res.json({ message: 'המשפחה נמחקה בהצלחה' });
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
-});
+}));
 
 // 12. הוספת ילד
-router.post('/:id/children', async (req, res) => {
-  try {
+router.post('/:id/children', validateRequest(requestSchemas.familyParams, 'params'), validateRequest(requestSchemas.childCreate), asyncHandler(async (req, res) => {
     const { name, grade, customPrice, price } = req.body;
-    //בדיקה ששם הילד מלא ולא מרווחים
-    if (!name || !name.trim()) return res.status(400).json({ message: 'שם הילד הוא שדה חובה' });
-
     //מחפש במסד הנתונים את רשומת המשפחה לפי המזהה הייחודי שלה
     const family = await Family.findById(req.params.id);
-    if (!family) return res.status(404).json({ message: 'המשפחה לא נמצאה' });
+    if (!family) throw new AppError(404, 'המשפחה לא נמצאה');
 
     //בדיקה האם שדה הילדים במשפחה מוגדר כמערך תקין
     //  אם מסיבה כלשהי אינו מערך, המערכת מאחלת אותו כמערך ריק
@@ -476,20 +399,16 @@ router.post('/:id/children', async (req, res) => {
     await family.save();
 
     return res.status(201).json(family);
-  } catch (error) {
-    return res.status(500).json({ message: 'שגיאה בהוספת ילד: ' + error.message });
-  }
-});
+}));
 
 // 13. עדכון ילד
-router.put('/:id/children/:childId', async (req, res) => {
-  try {
+router.put('/:id/children/:childId', validateRequest(requestSchemas.childParams, 'params'), validateRequest(requestSchemas.childUpdate), asyncHandler(async (req, res) => {
     const { name, grade, customPrice, price } = req.body;
     const family = await Family.findById(req.params.id);
-    if (!family) return res.status(404).json({ message: 'המשפחה לא נמצאה' });
+    if (!family) throw new AppError(404, 'המשפחה לא נמצאה');
 
     const child = family.children.id(req.params.childId);
-    if (!child) return res.status(404).json({ message: 'הילד לא נמצא' });
+    if (!child) throw new AppError(404, 'הילד לא נמצא');
 
     if (name !== undefined) child.name = name.trim();//בדיקה האם שדה השם אכן נכלל בבקשה שנשלחה לשרת ואם כן מנקה רווח
     if (grade !== undefined) child.grade = grade;//בדיקה האם שדה הכיתה נכלל בבקשה שנשלחה
@@ -507,16 +426,12 @@ router.put('/:id/children/:childId', async (req, res) => {
     family.markModified('children');//לסמן שיש שינוי במערך ילדים במונגוס
     await family.save();//שמירת שינויים
     return res.json(family);
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
-});
+}));
 
 // 14. מחיקת ילד
-router.delete('/:id/children/:childId', async (req, res) => {
-  try {
+router.delete('/:id/children/:childId', validateRequest(requestSchemas.childParams, 'params'), asyncHandler(async (req, res) => {
     const family = await Family.findById(req.params.id);
-    if (!family) return res.status(404).json({ message: 'המשפחה לא נמצאה' });
+    if (!family) throw new AppError(404, 'המשפחה לא נמצאה');
 
     //הפונקציה סורקת את מערך הילדים
     // URL מאתרת את הילד ששדה המזהה הייחודי שלו תואם למזהה שהועבר בכתובת 
@@ -524,10 +439,7 @@ router.delete('/:id/children/:childId', async (req, res) => {
     family.children.pull({ _id: req.params.childId });
     await family.save();
     return res.json(family);
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
-});
+}));
 
 //מסיימת את קובץ הנתבים הנוכחי ומייצאת אותו לשימוש בשרת המרכזי
 export default router;

@@ -1,5 +1,6 @@
 // ייבוא מודל הילד (Child) מתיקיית המודלים
 import Child from '../models/Child.js';
+import asyncHandler from '../middleware/asyncHandler.js';
 
 // מיפוי שמגדיר לכל קבוצת גיל נוכחית מהי קבוצת הגיל הבאה אליה הילד יעבור
 const nextAgeGroupMap = {
@@ -24,8 +25,7 @@ const nextAgeGroupMap = {
  * פונקציה לקידום כל הילדים במערכת בשנת לימודים אחת.
  * הפונקציה עוברת על כל הילדים במסד הנתונים ומעדכנת את קבוצת הגיל שלהם.
  */
-export const advanceYear = async (req, res) => {
-  try {
+export const advanceYear = asyncHandler(async (req, res) => {
     // שליפת כל רשומות הילדים ממסד הנתונים
     const children = await Child.find();
 
@@ -46,8 +46,4 @@ export const advanceYear = async (req, res) => {
 
     // החזרת תגובת הצלחה ללקוח
     res.json({ message: 'עדכון השנה בוצע בהצלחה לכל הילדים' });
-  } catch (error) {
-    // הטיפול בשגיאות במידה ומשהו נכשל במהלך התהליך
-    res.status(500).json({ message: 'שגיאה בביצוע עדכון שנה', error: error.message });
-  }
-};
+});

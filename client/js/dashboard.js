@@ -394,7 +394,7 @@ async function submitFiles() {
       loadFamilies();
     } else {
       const err = await res.json();
-      alert('שגיאה בהעלאת הקבצים: ' + err.message);
+      alert('שגיאה בהעלאת הקבצים: ' + (err.error || err.message));
     }
   } catch (e) {
     alert('שגיאת תקשורת בהעלאת הקבצים');
